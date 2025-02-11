@@ -7,13 +7,17 @@
 ## Our benchmark environment
 - Apple M1 Pro
 - Sonoma 14.6.1
-- `gcc (Homebrew GCC 13.2.0) 13.2.0`
+- `gcc (Homebrew GCC 13.3.0) 13.3.0`
 
 ## Additional compilation tests
-- Apple M1 Pro, Sonoma 14.6.1, `gcc (Homebrew GCC 13.3.0) 13.3.0`
-- Apple M1 Pro, Sonoma 14.6.1, `Apple clang version 15.0.0 (clang-1500.3.9.4)`
-- Dell Inc. XPS 9320, Ubuntu 22.04.5 LTS, `gcc (Ubuntu 11.4.0-1ubuntu1~22.04) 11.4.0`
-- Dell Inc. XPS 9320, Ubuntu 22.04.5 LTS, `Ubuntu clang version 14.0.0-1ubuntu1.1`
+- Apple M1 Pro, Sonoma 14.6.1,
+    - `gcc (Homebrew GCC 13.3.0) 13.3.0`
+    - `Apple clang version 15.0.0 (clang-1500.3.9.4)`
+- 11th Gen Intel(R) Core(TM) i7-11700K @ 3.60GHz, Debian GNU/Linux 12 (bookworm)
+    - `gcc (Debian 12.2.0-14) 12.2.0`
+- Dell Inc. XPS 9320, Ubuntu 22.04.5 LTS,
+    - `gcc (Ubuntu 11.4.0-1ubuntu1~22.04) 11.4.0`
+    - `Ubuntu clang version 14.0.0-1ubuntu1.1`
 
 ## How to compile
 Type `make`. Six binary files will be produced.
@@ -37,7 +41,7 @@ Type `./test_dh_akem`. Sample output:
 ```
 
 ### Benchmark
-Type `./speed_dh_akem`. Sample output:
+Type `./speed_dh_akem`, execute with `sudo` on macOS. Sample output:
 ```
 nike_akem_encap cycles: 629925
 nike_akem_decap cycles: 420291
@@ -60,7 +64,7 @@ Type `./test_pq_akem`. Sample output:
 ```
 
 ### Benchmark
-Type `./speed_pq_akem`. Sample output:
+Type `./speed_pq_akem`, execute with `sudo` on macOS. Sample output:
 ```
 pq_akem_keygen_expanded_sk cycles: 24523991
 pq_akem_keygen cycles: 24702269
@@ -94,7 +98,7 @@ Type `./test_h_akem`. Sample output:
 ```
 
 ### Benchmark
-Type `./speed_h_akem`. Sample output:
+Type `./speed_h_akem`, execute with `sudo` on macOS. Sample output:
 ```
 h_akem_keygen_expanded_sk cycles: 25086634
 h_akem_keygen cycles: 24751344
