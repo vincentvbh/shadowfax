@@ -74,7 +74,7 @@ int crypto_kem_keypair(uint8_t *pk,
 * Returns 0 (success)
 **************************************************/
 int crypto_kem_enc_derand(uint8_t *ct,
-                          uint8_t *ss,
+                          uint8_t *ss, size_t slen,
                           const uint8_t *pk,
                           const uint8_t *coins)
 {
@@ -86,7 +86,7 @@ int crypto_kem_enc_derand(uint8_t *ct,
 
   /* Multitarget countermeasure for coins + contributory KEM */
   hash_h(buf + KYBER_SYMBYTES, pk, KYBER_PUBLICKEYBYTES);
-  hash_g(kr, buf, 3 * KYBER_SYMBYTES);
+  hash_g(kr, 64, buf, 3 * KYBER_SYMBYTES);
 
   /* coins are in kr+KYBER_SYMBYTES */
   indcpa_enc(ct, buf, pk, kr+KYBER_SYMBYTES);
@@ -111,12 +111,12 @@ int crypto_kem_enc_derand(uint8_t *ct,
 * Returns 0 (success)
 **************************************************/
 int crypto_kem_enc(uint8_t *ct,
-                   uint8_t *ss,
+                   uint8_t *ss, size_t slen,
                    const uint8_t *pk)
 {
   uint8_t coins[KYBER_SYMBYTES];
   randombytes(coins, KYBER_SYMBYTES);
-  crypto_kem_enc_derand(ct, ss, pk, coins);
+  crypto_kem_enc_derand(ct, ss, slen, pk, coins);
   return 0;
 }
 
@@ -137,7 +137,7 @@ int crypto_kem_enc(uint8_t *ct,
 *
 * On failure, ss will contain a pseudo-random value.
 **************************************************/
-int crypto_kem_dec(uint8_t *ss,
+int crypto_kem_dec(uint8_t *ss, size_t slen,
                    const uint8_t *ct,
                    const uint8_t *sk)
 {
@@ -153,7 +153,7 @@ int crypto_kem_dec(uint8_t *ss,
 
   /* Multitarget countermeasure for coins + contributory KEM */
   memcpy(buf+KYBER_SYMBYTES, sk+KYBER_SECRETKEYBYTES - 3 * KYBER_SYMBYTES, 2 * KYBER_SYMBYTES);
-  hash_g(kr, buf, 3 * KYBER_SYMBYTES);
+  hash_g(kr, 64, buf, 3 * KYBER_SYMBYTES);
 
   /* coins are in kr+KYBER_SYMBYTES */
   indcpa_enc(cmp, buf, pk, kr+KYBER_SYMBYTES);
@@ -164,7 +164,7 @@ int crypto_kem_dec(uint8_t *ss,
   rkprf(ss,sk+KYBER_SECRETKEYBYTES-KYBER_SYMBYTES,ct);
 
   /* Copy true key to return buffer if fail is false */
-  cmov(ss,kr,KYBER_SYMBYTES,!fail);
+  cmov(ss, kr , KYBER_SYMBYTES,!fail);
 
   return 0;
 }

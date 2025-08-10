@@ -215,7 +215,7 @@ void indcpa_keypair_derand(uint8_t pk[KYBER_INDCPA_PUBLICKEYBYTES],
 
   memcpy(buf, coins, KYBER_SYMBYTES);
   buf[KYBER_SYMBYTES] = KYBER_K;
-  hash_g(buf, buf, KYBER_SYMBYTES+1);
+  hash_g(buf, 2 * KYBER_SYMBYTES, buf, KYBER_SYMBYTES+1);
 
   gen_a(a, publicseed);
 
