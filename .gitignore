@@ -11,14 +11,13 @@
 
 artifact*
 
+test_dh_akem
+test_pq_akem
+test_h_akem
 
-**/test_nike_akem
-**/test_pq_akem
-**/test_h_akem
-
-**/speed_nike_akem
-**/speed_pq_akem
-**/speed_h_akem
+speed_dh_akem
+speed_pq_akem
+speed_h_akem
 
 **/*.sage.py
 
