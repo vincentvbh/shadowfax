@@ -26,7 +26,7 @@ all: test
 
 .PRECIOUS: $(OBJS) $(LIB) test
 
-$(LIB): $(OBJS)
+$(LIB): $(HEADERS) $(SOURCES) $(OBJS)
 	$(AR) -r $@ $(OBJS)
 
 
