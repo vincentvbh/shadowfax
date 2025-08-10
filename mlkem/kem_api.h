@@ -1,21 +1,14 @@
 #ifndef KEM_API_H
-#define KEM_API_H
+#define KEM_APIH_
 
-// BAT_257_512
-
-#include <stddef.h>
 #include <stdint.h>
+#include <stddef.h>
 
-// 1 (TAGBYTE) + N / 64 * 65 (encode_257)
-#define KEM_PUBLICKEY_BYTES 521
-// 1 (TAGBYTE) + N / 64 * 57 (encode_ciphtertext_257) + 16 (C2_BYTES)
-#define KEM_CIPHERTXT_BYTES 473
+#include "params.h"
 
-#define KEM_SECRETKEY_BYTES 2953
-#define KEM_SHORTSECRETKEY_BYTES 417
-
-#define C2_BYTES 16
-#define SEED_BYTES 32
+#define KEM_PUBLICKEY_BYTES KYBER_PUBLICKEYBYTES
+#define KEM_CIPHERTXT_BYTES KYBER_CIPHERTEXTBYTES
+#define KEM_SECRETKEY_BYTES KYBER_SECRETKEYBYTES
 
 typedef struct {
     uint8_t sk[KEM_SECRETKEY_BYTES];
@@ -38,4 +31,7 @@ int kem_decap(
     const kem_sk *sk);
 
 #endif
+
+
+
 

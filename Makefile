@@ -9,9 +9,14 @@ RAND_PATH   = randombytes
 HASH_PATH   = hash
 SYMM_PATH   = symmetric
 NGEN_PATH   = ntru_gen
-KEM_PATH    = BAT
+BAT_PATH    = BAT
+MLKEM_PATH  = mlkem
 RSIG_PATH   = Gandalf
 DH_PATH     = dh
+
+
+KEM_PATH    = mlkem
+# KEM_PATH    = BAT
 
 CFLAGS     += -I$(RAND_PATH) -I$(HASH_PATH) -I$(SYMM_PATH) -I$(NGEN_PATH) -I$(KEM_PATH) -I$(RSIG_PATH) -I$(DH_PATH)
 
@@ -40,6 +45,12 @@ DH_HEADER   = $(wildcard $(DH_PATH)/*.h)
 DH_SOURCE   = $(filter-out $(DH_PATH)/test.c, $(wildcard $(DH_PATH)/*.c))
 
 HEADERS     = $(RAND_HEADER) $(HASH_HEADER) $(SYMM_HEADER) $(NGEN_HEADER) $(KEM_HEADER) $(RSIG_HEADER) $(DH_HEADER)
+
+ALL_SOURCE  = $(wildcard $(CYCL_PATH)/*.c) $(wildcard $(RAND_PATH)/*.c) $(wildcard $(HASH_PATH)/*.c) \
+			  $(wildcard $(SYMM_PATH)/*.c) $(wildcard $(NGEN_PATH)/*.c) $(wildcard $(RSIG_PATH)/*.c) \
+			  $(wildcard $(BAT_PATH)/*.c) $(wildcard $(MLKEM_PATH)/*.c) $(wildcard $(DH_SOURCE).*.c)
+
+ALL_OBJS    = $(patsubst %.c, %.o, $(ALL_SOURCE))
 
 # DH-AKEM
 
@@ -138,6 +149,7 @@ clean:
 	rm -f $(LIBDH)
 	rm -f $(LIBPQAKEM)
 	rm -f $(LIBHAKEM)
+	rm -f $(ALL_OBJS)
 
 
 
