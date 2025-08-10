@@ -28,9 +28,9 @@ int crypto_kem_keypair_derand(uint8_t *pk,
 {
   indcpa_keypair_derand(pk, sk, coins);
   memcpy(sk+KYBER_INDCPA_SECRETKEYBYTES, pk, KYBER_PUBLICKEYBYTES);
-  hash_h(sk+KYBER_SECRETKEYBYTES-2*KYBER_SYMBYTES, pk, KYBER_PUBLICKEYBYTES);
+  hash_h(sk+KYBER_SECRETKEYBYTES - 3 * KYBER_SYMBYTES, pk, KYBER_PUBLICKEYBYTES);
   /* Value z for pseudo-random output on reject */
-  memcpy(sk+KYBER_SECRETKEYBYTES-KYBER_SYMBYTES, coins+KYBER_SYMBYTES, KYBER_SYMBYTES);
+  memcpy(sk+KYBER_SECRETKEYBYTES - KYBER_SYMBYTES, coins+KYBER_SYMBYTES, KYBER_SYMBYTES);
   return 0;
 }
 
@@ -78,15 +78,15 @@ int crypto_kem_enc_derand(uint8_t *ct,
                           const uint8_t *pk,
                           const uint8_t *coins)
 {
-  uint8_t buf[2*KYBER_SYMBYTES];
+  uint8_t buf[3 * KYBER_SYMBYTES];
   /* Will contain key, coins */
   uint8_t kr[2*KYBER_SYMBYTES];
 
   memcpy(buf, coins, KYBER_SYMBYTES);
 
   /* Multitarget countermeasure for coins + contributory KEM */
-  hash_h(buf+KYBER_SYMBYTES, pk, KYBER_PUBLICKEYBYTES);
-  hash_g(kr, buf, 2*KYBER_SYMBYTES);
+  hash_h(buf + KYBER_SYMBYTES, pk, KYBER_PUBLICKEYBYTES);
+  hash_g(kr, buf, 3 * KYBER_SYMBYTES);
 
   /* coins are in kr+KYBER_SYMBYTES */
   indcpa_enc(ct, buf, pk, kr+KYBER_SYMBYTES);
@@ -142,7 +142,7 @@ int crypto_kem_dec(uint8_t *ss,
                    const uint8_t *sk)
 {
   int fail;
-  uint8_t buf[2*KYBER_SYMBYTES];
+  uint8_t buf[3 * KYBER_SYMBYTES];
   /* Will contain key, coins */
   uint8_t kr[2*KYBER_SYMBYTES];
 //  uint8_t cmp[KYBER_CIPHERTEXTBYTES+KYBER_SYMBYTES];
@@ -152,8 +152,8 @@ int crypto_kem_dec(uint8_t *ss,
   indcpa_dec(buf, ct, sk);
 
   /* Multitarget countermeasure for coins + contributory KEM */
-  memcpy(buf+KYBER_SYMBYTES, sk+KYBER_SECRETKEYBYTES-2*KYBER_SYMBYTES, KYBER_SYMBYTES);
-  hash_g(kr, buf, 2*KYBER_SYMBYTES);
+  memcpy(buf+KYBER_SYMBYTES, sk+KYBER_SECRETKEYBYTES - 3 * KYBER_SYMBYTES, 2 * KYBER_SYMBYTES);
+  hash_g(kr, buf, 3 * KYBER_SYMBYTES);
 
   /* coins are in kr+KYBER_SYMBYTES */
   indcpa_enc(cmp, buf, pk, kr+KYBER_SYMBYTES);
