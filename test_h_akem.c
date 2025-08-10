@@ -29,6 +29,7 @@ int main(void){
         h_akem_encap(sender_secret, &ct, &sender_sk, &sender_pk, &receiver_pk);
         correct += (h_akem_decap(receiver_secret, &ct, &receiver_sk, &receiver_pk, &sender_pk) == 1) &&
                    (memcmp(sender_secret, receiver_secret, 32) == 0);
+        assert(correct == (i + 1));
     }
     printf("%d/%d compatible shared secret pairs. (%s).\n\n", correct, ITERATIONS,
         (correct == ITERATIONS)?"ok":"ERROR!");
@@ -41,7 +42,7 @@ int main(void){
         h_akem_encap_expanded_sk(sender_secret, &ct, &sender_expanded_sk, &sender_pk, &receiver_pk);
         correct += (h_akem_decap(receiver_secret, &ct, &receiver_sk, &receiver_pk, &sender_pk) == 1) &&
                    (memcmp(sender_secret, receiver_secret, 32) == 0);
-
+        assert(correct == (i + 1));
     }
     printf("%d/%d compatible shared secret pairs. (%s).\n\n", correct, ITERATIONS,
         (correct == ITERATIONS)?"ok":"ERROR!");
@@ -57,7 +58,7 @@ int main(void){
 
         correct += h_akem_decap(receiver_secret, &ct, &receiver_sk, &receiver_pk, &sender_pk) == 1;
         correct += memcmp(sender_secret, receiver_secret, 32) == 0;
-
+        assert(correct == 0);
     }
     printf("%d/%d success decapsulation + compatible shared secret pairs. (%s).\n\n", correct, 2 * ITERATIONS,
         (correct == 0)?"ok":"ERROR!");
@@ -70,7 +71,7 @@ int main(void){
 
         h_akem_decap(attacker_secret, &ct, &attacker_sk, &attacker_pk, &sender_pk);
         correct += memcmp(sender_secret, attacker_secret, 32) == 0;
-
+        assert(correct == 0);
     }
     printf("%d/%d compatible shared secret pairs. (%s).\n\n", correct, ITERATIONS,
         (correct == 0)?"ok":"ERROR!");

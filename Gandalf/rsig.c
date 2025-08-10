@@ -51,29 +51,33 @@ void Gandalf_sign_expanded_sk(rsig_signature *s, const uint8_t *m, const size_t 
     uint8_t salt[SALT_BYTES];
     shake128incctx state;
 
-    randombytes(salt, SALT_BYTES);
+    do {
 
-    shake128_inc_init(&state);
-    shake128_inc_absorb(&state, (uint8_t*)m, mlen);
-    shake128_inc_absorb(&state, (uint8_t*)pks, RSIG_PUBLICKEY_BYTES);
-    shake128_inc_absorb(&state, (uint8_t*)salt, SALT_BYTES);
-    shake128_inc_finalize(&state);
-    hash_to_poly(&hash, &state);
+        randombytes(salt, SALT_BYTES);
 
-    memset(&acc, 0, sizeof(acc));
-    for(size_t i = 0; i < RING_K; i++){
-        if(i == party_id)
-            continue;
-        Gandalf_sample_poly(u + i);
-        unpack_h(&h_poly, &(pks->hs[i]).h[0]);
-        poly_mul(c + i, u + i, &h_poly);
-        poly_add(&acc, &acc, c + i);
-    }
+        shake128_inc_init(&state);
+        shake128_inc_absorb(&state, (uint8_t*)m, mlen);
+        shake128_inc_absorb(&state, (uint8_t*)pks, RSIG_PUBLICKEY_BYTES);
+        shake128_inc_absorb(&state, (uint8_t*)salt, SALT_BYTES);
+        shake128_inc_finalize(&state);
+        hash_to_poly(&hash, &state);
 
-    poly_sub(c + party_id, &hash, &acc);
-    poly_freeze(c + party_id, c + party_id);
+        memset(&acc, 0, sizeof(acc));
+        for(size_t i = 0; i < RING_K; i++){
+            if(i == party_id)
+                continue;
+            Gandalf_sample_poly(u + i);
+            unpack_h(&h_poly, &(pks->hs[i]).h[0]);
+            poly_mul(c + i, u + i, &h_poly);
+            poly_add(&acc, &acc, c + i);
+        }
 
-    sampler(u + party_id, &v, expanded_sk, c[party_id]);
+        poly_sub(c + party_id, &hash, &acc);
+        poly_freeze(c + party_id, c + party_id);
+
+        sampler(u + party_id, &v, expanded_sk, c[party_id]);
+
+    } while(Gandalf_signature_check_norm(u, v) == 0);
 
     // assert(Gandalf_signature_check_norm(u, v) == 1);
 

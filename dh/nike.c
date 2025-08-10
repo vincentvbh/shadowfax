@@ -10,7 +10,7 @@ int nike_keygen(nike_sk *sk, nike_pk *pk){
 int nike_sdk(nike_s *s, const nike_sk *sk, const nike_pk *pk){
     unsigned char buff[DH_BYTES];
     dh(buff, sk->sk, pk->pk);
-    sha3_256((uint8_t*)s->s, buff, sizeof buff);
+    sha3_512((uint8_t*)s->s, buff, sizeof buff);
     return 0;
 }
 

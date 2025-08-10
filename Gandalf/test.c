@@ -25,7 +25,6 @@ int intcmp(const void *x, const void *y)
 }
 
 int main(){
-  srand(time(0));
   seed_rng();
   sign_expanded_sk expanded_sk[16];
   sign_sk sk[16];

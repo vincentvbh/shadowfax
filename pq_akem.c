@@ -32,7 +32,7 @@ void pq_akem_encap_expanded_sk(uint8_t *pq_akem_k, pq_akem_ct *ct,
 
     kem_encap(kk, 48, &internal_kem_ct, &receiver_pk->kpk);
 
-    memmove(m + 0, &internal_kem_ct, KEM_CIPHERTXT_BYTES);
+    memmove(m, &internal_kem_ct, KEM_CIPHERTXT_BYTES);
     memmove(m + KEM_CIPHERTXT_BYTES, &sender_pk->kpk, KEM_PUBLICKEY_BYTES);
     memmove(m + KEM_CIPHERTXT_BYTES + KEM_PUBLICKEY_BYTES, &receiver_pk->kpk, KEM_PUBLICKEY_BYTES);
     memmove(m + KEM_CIPHERTXT_BYTES + 2 * KEM_PUBLICKEY_BYTES, &receiver_pk->spk, SIGN_PUBLICKEY_BYTES);
@@ -87,7 +87,7 @@ int pq_akem_decap(uint8_t *pq_akem_k, const pq_akem_ct *ct,
     aes128_ctr(dec_rsig, (void*)&ct->enc_rsig, RSIG_SIGNATURE_BYTES, aes_iv, &ctx);
     aes128_ctx_release(&ctx);
 
-    memmove(m + 0, &ct->ct, KEM_CIPHERTXT_BYTES);
+    memmove(m, &ct->ct, KEM_CIPHERTXT_BYTES);
     memmove(m + KEM_CIPHERTXT_BYTES, &sender_pk->kpk, KEM_PUBLICKEY_BYTES);
     memmove(m + KEM_CIPHERTXT_BYTES + KEM_PUBLICKEY_BYTES, &receiver_pk->kpk, KEM_PUBLICKEY_BYTES);
     memmove(m + KEM_CIPHERTXT_BYTES + 2 * KEM_PUBLICKEY_BYTES, &receiver_pk->spk, SIGN_PUBLICKEY_BYTES);

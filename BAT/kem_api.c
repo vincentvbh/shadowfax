@@ -102,21 +102,21 @@
 /*
  * Degrees up to 512 use BLAKE2s; degree 1024 uses BLAKE2b.
  */
-#if LOGN <= 9
-#define HASH           blake2s
-#define HASH_context   blake2s_context
-#define HASH_init      blake2s_init
-#define HASH_update    blake2s_update
-#define HASH_final     blake2s_final
-#define EXPAND         blake2s_expand
-#else
+// We use BLAKE2b.
+
+// #define HASH           blake2s
+// #define HASH_context   blake2s_context
+// #define HASH_init      blake2s_init
+// #define HASH_update    blake2s_update
+// #define HASH_final     blake2s_final
+// #define EXPAND         blake2s_expand
+
 #define HASH           blake2b
 #define HASH_context   blake2b_context
 #define HASH_init      blake2b_init
 #define HASH_update    blake2b_update
 #define HASH_final     blake2b_final
 #define EXPAND         blake2b_expand
-#endif
 
 /*
  * Recompute the additional secret seed (rr) from the private key seed.

@@ -5,7 +5,7 @@
 
 #define NIKE_PUBLICKEY_BYTES 32
 #define NIKE_SECRETKEY_BYTES 32
-#define NIKE_BYTES 32
+#define NIKE_BYTES 64
 
 typedef struct {
     uint8_t sk[NIKE_SECRETKEY_BYTES];

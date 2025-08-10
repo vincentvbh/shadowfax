@@ -7,17 +7,13 @@
 ## Our benchmark environment
 - Apple M1 Pro
 - Sonoma 14.6.1
-- `gcc (Homebrew GCC 13.3.0) 13.3.0`
+- `gcc (Homebrew GCC 13.2.0) 13.2.0`
 
 ## Additional compilation tests
-- Apple M1 Pro, Sonoma 14.6.1,
-    - `gcc (Homebrew GCC 13.3.0) 13.3.0`
-    - `Apple clang version 15.0.0 (clang-1500.3.9.4)`
-- 11th Gen Intel(R) Core(TM) i7-11700K @ 3.60GHz, Debian GNU/Linux 12 (bookworm)
-    - `gcc (Debian 12.2.0-14) 12.2.0`
-- Dell Inc. XPS 9320, Ubuntu 22.04.5 LTS,
-    - `gcc (Ubuntu 11.4.0-1ubuntu1~22.04) 11.4.0`
-    - `Ubuntu clang version 14.0.0-1ubuntu1.1`
+- Apple M1 Pro, Sonoma 14.6.1, `gcc (Homebrew GCC 13.3.0) 13.3.0`
+- Apple M1 Pro, Sonoma 14.6.1, `Apple clang version 15.0.0 (clang-1500.3.9.4)`
+- Dell Inc. XPS 9320, Ubuntu 22.04.5 LTS, `gcc (Ubuntu 11.4.0-1ubuntu1~22.04) 11.4.0`
+- Dell Inc. XPS 9320, Ubuntu 22.04.5 LTS, `Ubuntu clang version 14.0.0-1ubuntu1.1`
 
 ## How to compile
 Type `make`. Six binary files will be produced.
@@ -41,12 +37,19 @@ Type `./test_dh_akem`. Sample output:
 ```
 
 ### Benchmark
-Type `./speed_dh_akem`, execute with `sudo` on macOS. Sample output:
+Type `./speed_dh_akem`. Sample output:
 ```
-nike_akem_encap cycles: 629925
-nike_akem_decap cycles: 420291
-nike_keygen cycles: 208841
-nike_sdk cycles: 210194
+loaded db: a14 (Apple A14/M1)
+number of fixed counters: 2
+number of configurable counters: 8
+nike_akem_encap average cycles:
+679291
+nike_akem_decap average cycles:
+456717
+nike_keygen average cycles:
+226693
+nike_sdk average cycles:
+226852
 ```
 
 ## PQ-AKEM
@@ -64,23 +67,41 @@ Type `./test_pq_akem`. Sample output:
 ```
 
 ### Benchmark
-Type `./speed_pq_akem`, execute with `sudo` on macOS. Sample output:
+Type `./speed_pq_akem`. Sample output:
 ```
-pq_akem_keygen_expanded_sk cycles: 24523991
-pq_akem_keygen cycles: 24702269
-pq_akem_encap_expanded_sk cycles: 1215694
-pq_akem_encap cycles: 1248185
-pq_akem_decap cycles: 331514
-kem_keygen cycles: 11705212
-kem_encap cycles: 32584
-kem_decap cycles: 216229
-sign_keygen_expanded_sk cycles: 13142877
-sign_keygen cycles: 13274804
-Gandalf_sign_expanded_sk cycles: 1108763
-Gandalf_sign cycles: 1137925
-Gandalf_verify cycles: 94245
-sampler cycles: 609349
-Gandalf_sample_poly cycles: 412186
+loaded db: a14 (Apple A14/M1)
+number of fixed counters: 2
+number of configurable counters: 8
+pq_akem_keygen_expanded_sk average cycles:
+25420489
+pq_akem_keygen average cycles:
+25632320
+pq_akem_encap_expanded_sk average cycles:
+1256157
+pq_akem_encap average cycles:
+1286545
+pq_akem_decap average cycles:
+349481
+kem_keygen average cycles:
+12112300
+kem_encap average cycles:
+56878
+kem_decap average cycles:
+230360
+sign_keygen_expanded_sk average cycles:
+13422897
+sign_keygen average cycles:
+13318055
+Gandalf_sign_expanded_sk average cycles:
+1113264
+Gandalf_sign average cycles:
+1139382
+Gandalf_verify average cycles:
+100216
+sampler average cycles:
+608754
+Gandalf_sample_poly average cycles:
+413278
 ```
 
 ## Hybrid AKEM
@@ -98,23 +119,41 @@ Type `./test_h_akem`. Sample output:
 ```
 
 ### Benchmark
-Type `./speed_h_akem`, execute with `sudo` on macOS. Sample output:
+Type `./speed_h_akem`. Sample output:
 ```
-h_akem_keygen_expanded_sk cycles: 25086634
-h_akem_keygen cycles: 24751344
-h_akem_encap_expanded_sk cycles: 1845035
-h_akem_encap cycles: 1875279
-h_akem_decap cycles: 745420
-nike_keygen cycles: 207860
-nike_sdk cycles: 210034
-kem_keygen cycles: 11338464
-kem_encap cycles: 32350
-kem_decap cycles: 216713
-sign_keygen_expanded_sk cycles: 13137087
-sign_keygen cycles: 13017963
-Gandalf_sign_expanded_sk cycles: 1092342
-Gandalf_sign cycles: 1121973
-Gandalf_verify cycles: 78888
+loaded db: a14 (Apple A14/M1)
+number of fixed counters: 2
+number of configurable counters: 8
+h_akem_keygen_expanded_sk average cycles:
+25655423
+h_akem_keygen average cycles:
+25608536
+h_akem_encap_expanded_sk average cycles:
+1935618
+h_akem_encap average cycles:
+1961060
+h_akem_decap average cycles:
+795536
+nike_keygen average cycles:
+225866
+nike_sdk average cycles:
+226833
+kem_keygen average cycles:
+12013088
+kem_encap average cycles:
+57046
+kem_decap average cycles:
+230453
+sign_keygen_expanded_sk average cycles:
+13334238
+sign_keygen average cycles:
+13338869
+Gandalf_sign_expanded_sk average cycles:
+1103008
+Gandalf_sign average cycles:
+1135976
+Gandalf_verify average cycles:
+84583
 ```
 
 

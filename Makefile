@@ -1,7 +1,7 @@
 
-CC ?= gcc
+CC          = gcc
 
-CFLAGS = -O3 -Wall -mcpu=native -mtune=native
+CFLAGS      = -O3 -Wall -mcpu=native -mtune=native
 
 CYCL_PATH   = cycles
 
