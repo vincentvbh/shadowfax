@@ -133,6 +133,114 @@ mq_div(uint32_t x, uint32_t y)
 	return mq_mmul(x, iy);
 }
 
+#if FNDSA_AVX2
+
+TARGET_AVX2
+static inline __m256i
+mq_add_x16(__m256i x, __m256i y)
+{
+	__m256i qq = _mm256_set1_epi16(Q);
+	__m256i a = _mm256_sub_epi16(qq, _mm256_add_epi16(x, y));
+	__m256i b = _mm256_add_epi16(a,
+		_mm256_and_si256(qq, _mm256_srai_epi16(a, 15)));
+	return _mm256_sub_epi16(qq, b);
+}
+
+TARGET_AVX2
+static inline __m256i
+mq_sub_x16(__m256i x, __m256i y)
+{
+	__m256i qq = _mm256_set1_epi16(Q);
+	__m256i a = _mm256_sub_epi16(y, x);
+	__m256i b = _mm256_add_epi16(a,
+		_mm256_and_si256(qq, _mm256_srai_epi16(a, 15)));
+	return _mm256_sub_epi16(qq, b);
+}
+
+TARGET_AVX2
+static inline __m256i
+mq_half_x16(__m256i x)
+{
+	__m256i qq = _mm256_set1_epi16(Q);
+	__m256i y = _mm256_and_si256(x, _mm256_set1_epi16(1));
+	y = _mm256_sub_epi16(_mm256_setzero_si256(), y);
+	y = _mm256_and_si256(y, qq);
+	y = _mm256_add_epi16(x, y);
+	return _mm256_srli_epi16(y, 1);
+}
+
+/* Q1I split into low and high parts (16 bits each), converted to
+   signed 16-bit representation. */
+#define Q1Ilo   12287
+#define Q1Ihi   -2304
+
+TARGET_AVX2
+static inline __m256i
+mq_mred_x16(__m256i lo, __m256i hi)
+{
+	__m256i qx16 = _mm256_set1_epi16(Q);
+	__m256i q1ilox16 = _mm256_set1_epi16(Q1Ilo);
+	__m256i q1ihix16 = _mm256_set1_epi16(Q1Ihi);
+
+	/* x <- (x * Q1I) >> 16
+	   32-bit input is split into its low and high halves. Q1I is
+	   itself a 32-bit constant. Product is computed modulo 2^32,
+	   and we are interested only in its high 16 bits. */
+	__m256i x = _mm256_add_epi16(
+		_mm256_add_epi16(
+			_mm256_mulhi_epu16(lo, q1ilox16),
+			_mm256_mullo_epi16(lo, q1ihix16)),
+		_mm256_mullo_epi16(hi, q1ilox16));
+
+	/* x <- (x * Q) >> 16
+	   x and Q both fit on 16 bits each. */
+	x = _mm256_mulhi_epu16(x, qx16);
+
+	/* Result is x + 1. */
+	return _mm256_add_epi16(x, _mm256_set1_epi16(1));
+}
+
+TARGET_AVX2
+static inline __m256i
+mq_mmul_x16(__m256i x, __m256i y)
+{
+	return mq_mred_x16(_mm256_mullo_epi16(x, y), _mm256_mulhi_epu16(x, y));
+}
+
+TARGET_AVX2
+static __m256i
+mq_div_x16(__m256i x, __m256i y)
+{
+	/* Convert y to Montgomery representation. */
+	y = mq_mmul_x16(y, _mm256_set1_epi16(R2));
+
+	/* 1/y = y^(q-2), with a custom addition chain. */
+	__m256i y2 = mq_mmul_x16(y, y);
+	__m256i y3 = mq_mmul_x16(y2, y);
+	__m256i y5 = mq_mmul_x16(y3, y2);
+	__m256i y10 = mq_mmul_x16(y5, y5);
+	__m256i y20 = mq_mmul_x16(y10, y10);
+	__m256i y40 = mq_mmul_x16(y20, y20);
+	__m256i y80 = mq_mmul_x16(y40, y40);
+	__m256i y160 = mq_mmul_x16(y80, y80);
+	__m256i y163 = mq_mmul_x16(y160, y3);
+	__m256i y323 = mq_mmul_x16(y163, y160);
+	__m256i y646 = mq_mmul_x16(y323, y323);
+	__m256i y1292 = mq_mmul_x16(y646, y646);
+	__m256i y1455 = mq_mmul_x16(y1292, y163);
+	__m256i y2910 = mq_mmul_x16(y1455, y1455);
+	__m256i y5820 = mq_mmul_x16(y2910, y2910);
+	__m256i y6143 = mq_mmul_x16(y5820, y323);
+	__m256i y12286 = mq_mmul_x16(y6143, y6143);
+	__m256i iy = mq_mmul_x16(y12286, y);
+
+	/* Multiply by the dividend (x) to get x/y. Since iy is in
+	   Montgomery representation but x is in normal representation,
+	   the result is in normal representation. */
+	return mq_mmul_x16(x, iy);
+}
+
+#endif
 
 #if !FNDSA_ASM_CORTEXM4
 /* see inner.h */
@@ -147,6 +255,38 @@ mqpoly_small_to_int(unsigned logn, const int8_t *f, uint16_t *d)
 }
 #endif
 
+#if FNDSA_AVX2
+TARGET_AVX2
+void
+avx2_mqpoly_small_to_int(unsigned logn, const int8_t *f, uint16_t *d)
+{
+	if (logn >= 4) {
+		const __m128i *fp = (const __m128i *)f;
+		__m128i *dp = (__m128i *)d;
+		__m128i qq = _mm_set1_epi16(Q);
+		for (size_t i = 0; i < (1u << (logn - 4)); i ++) {
+			__m128i x = _mm_loadu_si128(fp + i);
+			x = _mm_sub_epi8(_mm_setzero_si128(), x);
+			__m128i x0 = _mm_cvtepi8_epi16(x);
+			__m128i x1 = _mm_cvtepi8_epi16(_mm_bsrli_si128(x, 8));
+			x0 = _mm_add_epi16(x0,
+				_mm_and_si128(_mm_srai_epi16(x0, 15), qq));
+			x1 = _mm_add_epi16(x1,
+				_mm_and_si128(_mm_srai_epi16(x1, 15), qq));
+			x0 = _mm_sub_epi16(qq, x0);
+			x1 = _mm_sub_epi16(qq, x1);
+			_mm_storeu_si128(dp + (i << 1) + 0, x0);
+			_mm_storeu_si128(dp + (i << 1) + 1, x1);
+		}
+	} else {
+		size_t n = (size_t)1 << logn;
+		for (size_t i = 0; i < n; i ++) {
+			uint32_t x = -(uint32_t)f[i];
+			d[i] = (uint16_t)(Q - (x + (Q & (x >> 16))));
+		}
+	}
+}
+#endif
 
 #if !FNDSA_ASM_CORTEXM4
 /* see inner.h */
@@ -161,6 +301,31 @@ mqpoly_signed_to_int(unsigned logn, uint16_t *d)
 }
 #endif
 
+#if FNDSA_AVX2
+TARGET_AVX2
+void
+avx2_mqpoly_signed_to_int(unsigned logn, uint16_t *d)
+{
+	if (logn >= 4) {
+		__m256i *dp = (__m256i *)d;
+		__m256i qq = _mm256_set1_epi16(Q);
+		for (size_t i = 0; i < (1u << (logn - 4)); i ++) {
+			__m256i y = _mm256_loadu_si256(dp + i);
+			y = _mm256_sub_epi16(_mm256_setzero_si256(), y);
+			y = _mm256_add_epi16(y,
+				_mm256_and_si256(qq, _mm256_srai_epi16(y, 15)));
+			y = _mm256_sub_epi16(qq, y);
+			_mm256_storeu_si256(dp + i, y);
+		}
+	} else {
+		size_t n = (size_t)1 << logn;
+		for (size_t i = 0; i < n; i ++) {
+			uint32_t x = -(uint32_t)*(int16_t *)&d[i];
+			d[i] = (uint16_t)(Q - (x + (Q & (x >> 16))));
+		}
+	}
+}
+#endif
 
 /* see inner.h */
 int
@@ -184,6 +349,48 @@ mqpoly_int_to_small(unsigned logn, const uint16_t *d, int8_t *f)
 	return (ov >> 8) == 0;
 }
 
+#if FNDSA_AVX2
+TARGET_AVX2
+int
+avx2_mqpoly_int_to_small(unsigned logn, const uint16_t *d, int8_t *f)
+{
+	if (logn >= 4) {
+		const __m256i *dp = (const __m256i *)d;
+		__m128i *fp = (__m128i *)f;
+		__m256i y128 = _mm256_set1_epi16(128);
+		__m256i sm = _mm256_setr_epi8(
+			0, 2, 4, 6, 8, 10, 12, 14,
+			-1, -1, -1, -1, -1, -1, -1, -1,
+			0, 2, 4, 6, 8, 10, 12, 14,
+			-1, -1, -1, -1, -1, -1, -1, -1);
+		__m256i ov = _mm256_setzero_si256();
+		for (size_t i = 0; i < (1u << (logn - 4)); i ++) {
+			__m256i y = _mm256_loadu_si256(dp + i);
+			y = mq_add_x16(y, y128);
+			ov = _mm256_or_si256(ov, y);
+			y = _mm256_sub_epi16(y, y128);
+			y = _mm256_shuffle_epi8(y, sm);
+			y = _mm256_permute4x64_epi64(y, 0x88);
+			_mm_storeu_si128(fp + i, _mm256_castsi256_si128(y));
+		}
+		uint32_t r = (uint32_t)_mm256_movemask_epi8(ov);
+		return (r & 0xAAAAAAAA) == 0;
+	} else {
+		size_t n = (size_t)1 << logn;
+		uint32_t ov = 0;
+		for (size_t i = 0; i < n; i ++) {
+			/* We add 128. If the value is in-range, we get an
+			   integer in [1,255]; otherwise, we get an integer
+			   in [256,q]. */
+			uint32_t x = mq_add(d[i], 128);
+			ov |= x;
+			x -= 128;
+			f[i] = (int8_t)*(int32_t *)&x;
+		}
+		return (ov >> 8) == 0;
+	}
+}
+#endif
 
 #if !FNDSA_ASM_CORTEXM4
 /* see inner.h */
@@ -199,6 +406,30 @@ mqpoly_ext_to_int(unsigned logn, uint16_t *d)
 }
 #endif
 
+#if FNDSA_AVX2
+TARGET_AVX2
+void
+avx2_mqpoly_ext_to_int(unsigned logn, uint16_t *d)
+{
+	if (logn >= 4) {
+		__m256i *dp = (__m256i *)d;
+		__m256i qq = _mm256_set1_epi16(Q);
+		for (size_t i = 0; i < (1u << (logn - 4)); i ++) {
+			__m256i y = _mm256_loadu_si256(dp + i);
+			y = _mm256_add_epi16(y, _mm256_and_si256(qq,
+				_mm256_cmpeq_epi16(y, _mm256_setzero_si256())));
+			_mm256_storeu_si256(dp + i, y);
+		}
+	} else {
+		size_t n = (size_t)1 << logn;
+		for (size_t i = 0; i < n; i ++) {
+			uint32_t x = d[i];
+			x += Q & ((x - 1) >> 16);
+			d[i] = (uint16_t)x;
+		}
+	}
+}
+#endif
 
 #if !FNDSA_ASM_CORTEXM4
 /* see inner.h */
@@ -214,6 +445,30 @@ mqpoly_int_to_ext(unsigned logn, uint16_t *d)
 }
 #endif
 
+#if FNDSA_AVX2
+TARGET_AVX2
+void
+avx2_mqpoly_int_to_ext(unsigned logn, uint16_t *d)
+{
+	if (logn >= 4) {
+		__m256i *dp = (__m256i *)d;
+		__m256i qq = _mm256_set1_epi16(Q);
+		for (size_t i = 0; i < (1u << (logn - 4)); i ++) {
+			__m256i y = _mm256_loadu_si256(dp + i);
+			y = _mm256_sub_epi16(y, _mm256_and_si256(qq,
+				_mm256_cmpeq_epi16(y, qq)));
+			_mm256_storeu_si256(dp + i, y);
+		}
+	} else {
+		size_t n = (size_t)1 << logn;
+		for (size_t i = 0; i < n; i ++) {
+			uint32_t x = (uint32_t)d[i] - Q;
+			x += Q & (x >> 16);
+			d[i] = (uint16_t)x;
+		}
+	}
+}
+#endif
 
 #if !FNDSA_ASM_CORTEXM4
 /* see inner.h */
@@ -245,6 +500,159 @@ mqpoly_int_to_ntt(unsigned logn, uint16_t *d)
 }
 #endif
 
+#if FNDSA_AVX2
+TARGET_AVX2
+static inline void
+avx2_NTT32(__m256i *a0, __m256i *a1, size_t k)
+{
+	__m256i ya0, ya1, yt1, yt2, yt3, yt4, yg1, yg2, yg3, ysk;
+	uint16_t g1_0, g1_1;
+
+	ya0 = *a0;
+	ya1 = *a1;
+
+	/* t = 32, m = 1 */
+	yt1 = ya0;
+	yt2 = mq_mmul_x16(ya1, _mm256_set1_epi16(mq_GM[k]));
+	ya0 = mq_add_x16(yt1, yt2);
+	ya1 = mq_sub_x16(yt1, yt2);
+
+	/* ya0:  0  1  2  3  4  5  6  7 |  8  9 10 11 12 13 14 15 */
+	/* ya1: 16 17 18 19 20 21 22 23 | 24 25 26 27 28 29 30 31 */
+
+	/* t = 16, m = 2 */
+	yt1 = _mm256_permute2x128_si256(ya0, ya1, 0x20);
+	yt2 = _mm256_permute2x128_si256(ya0, ya1, 0x31);
+	g1_0 = mq_GM[(k << 1) + 0];
+	g1_1 = mq_GM[(k << 1) + 1];
+	yg1 = _mm256_setr_epi16(
+		g1_0, g1_0, g1_0, g1_0, g1_0, g1_0, g1_0, g1_0,
+		g1_1, g1_1, g1_1, g1_1, g1_1, g1_1, g1_1, g1_1);
+	yt2 = mq_mmul_x16(yt2, yg1);
+	ya0 = mq_add_x16(yt1, yt2);
+	ya1 = mq_sub_x16(yt1, yt2);
+
+	/* ya0:  0  1  2  3  4  5  6  7 | 16 17 18 19 20 21 22 23 */
+	/* ya1:  8  9 10 11 12 13 14 15 | 24 25 26 27 28 29 30 31 */
+
+	/* t = 8, m = 4 */
+	yt1 = _mm256_unpacklo_epi64(ya0, ya1);
+	yt2 = _mm256_unpackhi_epi64(ya0, ya1);
+	yg2 = _mm256_setr_epi64x(
+		mq_GM[(k << 2) + 0], mq_GM[(k << 2) + 1],
+		mq_GM[(k << 2) + 2], mq_GM[(k << 2) + 3]);
+	yg2 = _mm256_or_si256(yg2, _mm256_slli_epi64(yg2, 32));
+	yg2 = _mm256_or_si256(yg2, _mm256_slli_epi32(yg2, 16));
+	yt2 = mq_mmul_x16(yt2, yg2);
+	ya0 = mq_add_x16(yt1, yt2);
+	ya1 = mq_sub_x16(yt1, yt2);
+
+	/* ya0:  0  1  2  3  8  9 10 11 | 16 17 18 19 24 25 26 27 */
+	/* ya1:  4  5  6  7 12 13 14 15 | 20 21 22 23 28 29 30 31 */
+
+	/* t = 4, m = 8 */
+	yt3 = _mm256_shuffle_epi32(ya0, 0xD8);
+	yt4 = _mm256_shuffle_epi32(ya1, 0xD8);
+	yt1 = _mm256_unpacklo_epi32(yt3, yt4);
+	yt2 = _mm256_unpackhi_epi32(yt3, yt4);
+	yg3 = _mm256_cvtepi16_epi32(
+		_mm_loadu_si128((const __m128i *)mq_GM + k));
+	yg3 = _mm256_or_si256(yg3, _mm256_slli_epi32(yg3, 16));
+	yt2 = mq_mmul_x16(yt2, yg3);
+	ya0 = mq_add_x16(yt1, yt2);
+	ya1 = mq_sub_x16(yt1, yt2);
+
+	/* ya0:  0  1  4  5  8  9 12 13 | 16 17 20 21 24 25 28 29 */
+	/* ya1:  2  3  6  7 10 11 14 15 | 18 19 22 23 26 27 30 31 */
+
+	/* t = 2, m = 16 */
+	ysk = _mm256_setr_epi8(
+		0, 1, 4, 5, 8, 9, 12, 13, 2, 3, 6, 7, 10, 11, 14, 15,
+		0, 1, 4, 5, 8, 9, 12, 13, 2, 3, 6, 7, 10, 11, 14, 15);
+	yt3 = _mm256_shuffle_epi8(ya0, ysk);
+	yt4 = _mm256_shuffle_epi8(ya1, ysk);
+	yt1 = _mm256_unpacklo_epi16(yt3, yt4);
+	yt2 = _mm256_unpackhi_epi16(yt3, yt4);
+	yt2 = mq_mmul_x16(yt2,
+		_mm256_loadu_si256((const __m256i *)mq_GM + k));
+	ya0 = mq_add_x16(yt1, yt2);
+	ya1 = mq_sub_x16(yt1, yt2);
+
+	/* ya0:  0  2  4  6  8 10 12 14 | 16 18 20 22 24 26 28 30 */
+	/* ya1:  1  3  5  7  9 11 13 15 | 17 19 21 23 25 27 29 31 */
+	yt1 = _mm256_unpacklo_epi16(ya0, ya1);
+	yt2 = _mm256_unpackhi_epi16(ya0, ya1);
+	ya0 = _mm256_permute2x128_si256(yt1, yt2, 0x20);
+	ya1 = _mm256_permute2x128_si256(yt1, yt2, 0x31);
+
+	*a0 = ya0;
+	*a1 = ya1;
+}
+
+TARGET_AVX2
+void
+avx2_mqpoly_int_to_ntt(unsigned logn, uint16_t *d)
+{
+	if (logn == 0) {
+		return;
+	}
+	if (logn >= 5) {
+		__m256i *dp = (__m256i *)d;
+		size_t n = (size_t)1 << logn;
+		size_t t = n >> 4;
+		for (unsigned lm = 0; lm < (logn - 5); lm ++) {
+			size_t m = (size_t)1 << lm;
+			size_t ht = t >> 1;
+			size_t j0 = 0;
+			for (size_t i = 0; i < m; i ++) {
+				__m256i ys = _mm256_set1_epi16(mq_GM[i + m]);
+				for (size_t j = 0; j < ht; j ++) {
+					size_t j1 = j0 + j;
+					size_t j2 = j1 + ht;
+					__m256i y1, y2;
+					y1 = _mm256_loadu_si256(dp + j1);
+					y2 = _mm256_loadu_si256(dp + j2);
+					y2 = mq_mmul_x16(y2, ys);
+					_mm256_storeu_si256(dp + j1,
+						mq_add_x16(y1, y2));
+					_mm256_storeu_si256(dp + j2,
+						mq_sub_x16(y1, y2));
+				}
+				j0 += t;
+			}
+			t = ht;
+		}
+		size_t m = n >> 5;
+		for (size_t i = 0; i < m; i ++) {
+			__m256i ya0 = _mm256_loadu_si256(dp + (i << 1) + 0);
+			__m256i ya1 = _mm256_loadu_si256(dp + (i << 1) + 1);
+			avx2_NTT32(&ya0, &ya1, i + m);
+			_mm256_storeu_si256(dp + (i << 1) + 0, ya0);
+			_mm256_storeu_si256(dp + (i << 1) + 1, ya1);
+		}
+	} else {
+		size_t t = (size_t)1 << logn;
+		for (unsigned lm = 0; lm < logn; lm ++) {
+			size_t m = (size_t)1 << lm;
+			size_t ht = t >> 1;
+			size_t j0 = 0;
+			for (size_t i = 0; i < m; i ++) {
+				uint32_t s = mq_GM[i + m];
+				for (size_t j = 0; j < ht; j ++) {
+					size_t j1 = j0 + j;
+					size_t j2 = j1 + ht;
+					uint32_t x1 = d[j1];
+					uint32_t x2 = mq_mmul(d[j2], s);
+					d[j1] = (uint16_t)mq_add(x1, x2);
+					d[j2] = (uint16_t)mq_sub(x1, x2);
+				}
+				j0 += t;
+			}
+			t = ht;
+		}
+	}
+}
+#endif
 
 #if !FNDSA_ASM_CORTEXM4
 /* see inner.h */
@@ -276,6 +684,159 @@ mqpoly_ntt_to_int(unsigned logn, uint16_t *d)
 }
 #endif
 
+#if FNDSA_AVX2
+TARGET_AVX2
+static inline void
+avx2_iNTT32(__m256i *a0, __m256i *a1, size_t k)
+{
+	__m256i ya0, ya1, yt1, yt2, yt3, yt4, yig0, yig1, yig2, yig3, ysk;
+	uint16_t ig1_0, ig1_1;
+
+	ya0 = *a0;
+	ya1 = *a1;
+
+	/* ya0:  0  1  2  3  4  5  6  7 |  8  9 10 11 12 13 14 15 */
+	/* ya1: 16 17 18 19 20 21 22 23 | 24 25 26 27 28 29 30 31 */
+
+	yt1 = _mm256_permute2x128_si256(ya0, ya1, 0x20);
+	yt2 = _mm256_permute2x128_si256(ya0, ya1, 0x31);
+
+	/* yt1:  0  1  2  3  4  5  6  7 | 16 17 18 19 20 21 22 23 */
+	/* yt2:  8  9 10 11 12 13 14 15 | 24 25 26 27 28 29 30 31 */
+
+	ysk = _mm256_setr_epi8(
+		0, 1, 4, 5, 8, 9, 12, 13, 2, 3, 6, 7, 10, 11, 14, 15,
+		0, 1, 4, 5, 8, 9, 12, 13, 2, 3, 6, 7, 10, 11, 14, 15);
+	yt3 = _mm256_shuffle_epi8(yt1, ysk);
+	yt4 = _mm256_shuffle_epi8(yt2, ysk);
+
+	/* yt3:  0  2  4  6  1  3  5  7 | 16 18 20 22 17 19 21 23 */
+	/* yt4:  8 10 12 14  9 11 13 15 | 24 26 28 30 25 27 29 31 */
+
+	yt1 = _mm256_unpacklo_epi64(yt3, yt4);
+	yt2 = _mm256_unpackhi_epi64(yt3, yt4);
+	ya0 = mq_half_x16(mq_add_x16(yt1, yt2));
+	ya1 = mq_mmul_x16(mq_sub_x16(yt1, yt2),
+		_mm256_loadu_si256((const __m256i *)mq_iGM + k));
+
+	/* ya0:  0  2  4  6  8 10 12 14 | 16 18 20 22 24 26 28 30 */
+	/* ya1:  1  3  5  7  9 11 13 15 | 17 19 21 23 25 27 29 31 */
+
+	yt1 = _mm256_blend_epi16(ya0, _mm256_slli_epi32(ya1, 16), 0xAA);
+	yt2 = _mm256_blend_epi16(_mm256_srli_epi32(ya0, 16), ya1, 0xAA);
+	yig3 = _mm256_cvtepi16_epi32(
+		_mm_loadu_si128((const __m128i *)mq_iGM + k));
+	yig3 = _mm256_or_si256(yig3, _mm256_slli_epi32(yig3, 16));
+	ya0 = mq_half_x16(mq_add_x16(yt1, yt2));
+	ya1 = mq_mmul_x16(mq_sub_x16(yt1, yt2), yig3);
+
+	/* ya0:  0  1  4  5  8  9 12 13 | 16 17 20 21 24 25 28 29 */
+	/* ya1:  2  3  6  7 10 11 14 15 | 18 19 22 23 26 27 30 31 */
+
+	yt1 = _mm256_blend_epi16(ya0, _mm256_slli_epi64(ya1, 32), 0xCC);
+	yt2 = _mm256_blend_epi16(_mm256_srli_epi64(ya0, 32), ya1, 0xCC);
+	yig2 = _mm256_setr_epi64x(
+		mq_iGM[(k << 2) + 0], mq_iGM[(k << 2) + 1],
+		mq_iGM[(k << 2) + 2], mq_iGM[(k << 2) + 3]);
+	yig2 = _mm256_or_si256(yig2, _mm256_slli_epi64(yig2, 32));
+	yig2 = _mm256_or_si256(yig2, _mm256_slli_epi32(yig2, 16));
+	ya0 = mq_half_x16(mq_add_x16(yt1, yt2));
+	ya1 = mq_mmul_x16(mq_sub_x16(yt1, yt2), yig2);
+
+	/* ya0:  0  1  2  3  8  9 10 11 | 16 17 18 19 24 25 26 27 */
+	/* ya1:  4  5  6  7 12 13 14 15 | 20 21 22 23 28 29 30 31 */
+
+	yt1 = _mm256_unpacklo_epi64(ya0, ya1);
+	yt2 = _mm256_unpackhi_epi64(ya0, ya1);
+	ig1_0 = mq_iGM[(k << 1) + 0];
+	ig1_1 = mq_iGM[(k << 1) + 1];
+	yig1 = _mm256_setr_epi16(
+		ig1_0, ig1_0, ig1_0, ig1_0, ig1_0, ig1_0, ig1_0, ig1_0,
+		ig1_1, ig1_1, ig1_1, ig1_1, ig1_1, ig1_1, ig1_1, ig1_1);
+	ya0 = mq_half_x16(mq_add_x16(yt1, yt2));
+	ya1 = mq_mmul_x16(mq_sub_x16(yt1, yt2), yig1);
+
+	/* ya0:  0  1  2  3  4  5  6  7 | 16 17 18 19 20 21 22 23 */
+	/* ya1:  8  9 10 11 12 13 14 15 | 24 25 26 27 28 29 30 31 */
+
+	yt1 = _mm256_permute2x128_si256(ya0, ya1, 0x20);
+	yt2 = _mm256_permute2x128_si256(ya0, ya1, 0x31);
+	yig0 = _mm256_set1_epi16(mq_iGM[k]);
+	ya0 = mq_half_x16(mq_add_x16(yt1, yt2));
+	ya1 = mq_mmul_x16(mq_sub_x16(yt1, yt2), yig0);
+
+	/* ya0:  0  1  2  3  4  5  6  7 |  8  9 10 11 12 13 14 15 */
+	/* ya1: 16 17 18 19 20 21 22 23 | 24 25 26 27 28 29 30 31 */
+
+	*a0 = ya0;
+	*a1 = ya1;
+}
+
+TARGET_AVX2
+void
+avx2_mqpoly_ntt_to_int(unsigned logn, uint16_t *d)
+{
+	if (logn == 0) {
+		return;
+	}
+	if (logn >= 5) {
+		__m256i *dp = (__m256i *)d;
+		size_t n = (size_t)1 << logn;
+		size_t m = n >> 5;
+		for (size_t i = 0; i < m; i ++) {
+			__m256i ya0 = _mm256_loadu_si256(dp + (i << 1) + 0);
+			__m256i ya1 = _mm256_loadu_si256(dp + (i << 1) + 1);
+			avx2_iNTT32(&ya0, &ya1, i + m);
+			_mm256_storeu_si256(dp + (i << 1) + 0, ya0);
+			_mm256_storeu_si256(dp + (i << 1) + 1, ya1);
+		}
+		size_t t = 2;
+		for (unsigned lm = 5; lm < logn; lm ++) {
+			size_t hm = (size_t)1 << (logn - 1 - lm);
+			size_t dt = t << 1;
+			size_t j0 = 0;
+			for (size_t i = 0; i < hm; i ++) {
+				__m256i ys = _mm256_set1_epi16(mq_iGM[i + hm]);
+				for (size_t j = 0; j < t; j ++) {
+					size_t j1 = j0 + j;
+					size_t j2 = j1 + t;
+					__m256i y1, y2;
+					y1 = _mm256_loadu_si256(dp + j1);
+					y2 = _mm256_loadu_si256(dp + j2);
+					_mm256_storeu_si256(dp + j1,
+						mq_half_x16(
+							mq_add_x16(y1, y2)));
+					_mm256_storeu_si256(dp + j2,
+						mq_mmul_x16(ys,
+							mq_sub_x16(y1, y2)));
+				}
+				j0 += dt;
+			}
+			t = dt;
+		}
+	} else {
+		size_t t = 1;
+		for (unsigned lm = 0; lm < logn; lm ++) {
+			size_t hm = (size_t)1 << (logn - 1 - lm);
+			size_t dt = t << 1;
+			size_t j0 = 0;
+			for (size_t i = 0; i < hm; i ++) {
+				uint32_t s = mq_iGM[i + hm];
+				for (size_t j = 0; j < t; j ++) {
+					size_t j1 = j0 + j;
+					size_t j2 = j1 + t;
+					uint32_t x1 = d[j1];
+					uint32_t x2 = d[j2];
+					d[j1] = mq_half(mq_add(x1, x2));
+					d[j2] = mq_mmul(mq_sub(x1, x2), s);
+				}
+				j0 += dt;
+			}
+			t = dt;
+		}
+	}
+}
+#endif
 
 #if !FNDSA_ASM_CORTEXM4
 /* see inner.h */
@@ -289,6 +850,29 @@ mqpoly_mul_ntt(unsigned logn, uint16_t *a, const uint16_t *b)
 }
 #endif
 
+#if FNDSA_AVX2
+TARGET_AVX2
+void
+avx2_mqpoly_mul_ntt(unsigned logn, uint16_t *a, const uint16_t *b)
+{
+	if (logn >= 4) {
+		__m256i *ap = (__m256i *)a;
+		const __m256i *bp = (const __m256i *)b;
+		__m256i yR2 = _mm256_set1_epi16(R2);
+		for (size_t i = 0; i < (1u << (logn - 4)); i ++) {
+			__m256i ya = _mm256_loadu_si256(ap + i);
+			__m256i yb = _mm256_loadu_si256(bp + i);
+			ya = mq_mmul_x16(mq_mmul_x16(ya, yb), yR2);
+			_mm256_storeu_si256(ap + i, ya);
+		}
+	} else {
+		size_t n = (size_t)1 << logn;
+		for (size_t i = 0; i < n; i ++) {
+			a[i] = (uint16_t)mq_mmul(mq_mmul(a[i], b[i]), R2);
+		}
+	}
+}
+#endif
 
 /* see inner.h */
 int
@@ -309,6 +893,37 @@ mqpoly_div_ntt(unsigned logn, uint16_t *a, const uint16_t *b)
 	return (r >> 16) != 0;
 }
 
+#if FNDSA_AVX2
+TARGET_AVX2
+int
+avx2_mqpoly_div_ntt(unsigned logn, uint16_t *a, const uint16_t *b)
+{
+	if (logn >= 4) {
+		__m256i *ap = (__m256i *)a;
+		const __m256i *bp = (const __m256i *)b;
+		__m256i qq = _mm256_set1_epi16(Q);
+		__m256i ov = _mm256_set1_epi16(-1);
+		for (size_t i = 0; i < (1u << (logn - 4)); i ++) {
+			__m256i ya = _mm256_loadu_si256(ap + i);
+			__m256i yb = _mm256_loadu_si256(bp + i);
+			ya = mq_div_x16(ya, yb);
+			_mm256_storeu_si256(ap + i, ya);
+			ov = _mm256_and_si256(ov, _mm256_sub_epi16(yb, qq));
+		}
+		uint32_t r = (uint32_t)_mm256_movemask_epi8(ov);
+		return (r & 0xAAAAAAAA) == 0xAAAAAAAA;
+	} else {
+		size_t n = (size_t)1 << logn;
+		uint32_t r = 0xFFFFFFFF;
+		for (size_t i = 0; i < n; i ++) {
+			uint32_t x = b[i];
+			r &= x - Q;
+			a[i] = (uint16_t)mq_div(a[i], x);
+		}
+		return (r >> 16) != 0;
+	}
+}
+#endif
 
 #if !FNDSA_ASM_CORTEXM4
 /* see inner.h */
@@ -334,6 +949,28 @@ mqpoly_add(unsigned logn, uint16_t *a, const uint16_t *b)
 }
 #endif
 
+#if FNDSA_AVX2
+TARGET_AVX2
+void
+avx2_mqpoly_sub(unsigned logn, uint16_t *a, const uint16_t *b)
+{
+	if (logn >= 4) {
+		__m256i *ap = (__m256i *)a;
+		const __m256i *bp = (const __m256i *)b;
+		for (size_t i = 0; i < (1u << (logn - 4)); i ++) {
+			__m256i ya = _mm256_loadu_si256(ap + i);
+			__m256i yb = _mm256_loadu_si256(bp + i);
+			ya = mq_sub_x16(ya, yb);
+			_mm256_storeu_si256(ap + i, ya);
+		}
+	} else {
+		size_t n = (size_t)1 << logn;
+		for (size_t i = 0; i < n; i ++) {
+			a[i] = (uint16_t)mq_sub(a[i], b[i]);
+		}
+	}
+}
+#endif
 
 /* see inner.h */
 int
@@ -352,6 +989,33 @@ mqpoly_is_invertible(unsigned logn, const int8_t *f, uint16_t *tmp)
 	return (r >> 16) != 0;
 }
 
+#if FNDSA_AVX2
+TARGET_AVX2
+int
+avx2_mqpoly_is_invertible(unsigned logn, const int8_t *f, uint16_t *tmp)
+{
+	size_t n = (size_t)1 << logn;
+	avx2_mqpoly_small_to_int(logn, f, tmp);
+	avx2_mqpoly_int_to_ntt(logn, tmp);
+	if (logn >= 4) {
+		const __m256i *tp = (const __m256i *)tmp;
+		__m256i qq = _mm256_set1_epi16(Q);
+		__m256i yr = _mm256_set1_epi16(-1);
+		for (size_t i = 0; i < (n >> 4); i ++) {
+			__m256i y = _mm256_loadu_si256(tp + i);
+			yr = _mm256_and_si256(yr, _mm256_sub_epi16(y, qq));
+		}
+		uint32_t r = (uint32_t)_mm256_movemask_epi8(yr);
+		return (r & 0xAAAAAAAA) == 0xAAAAAAAA;
+	} else {
+		uint32_t r = 0xFFFFFFFF;
+		for (size_t i = 0; i < n; i ++) {
+			r &= (uint32_t)tmp[i] - Q;
+		}
+		return (r >> 16) != 0;
+	}
+}
+#endif
 
 /* see inner.h */
 void
@@ -367,6 +1031,21 @@ mqpoly_div_small(unsigned logn, const int8_t *g, const int8_t *f,
 	mqpoly_int_to_ext(logn, h);
 }
 
+#if FNDSA_AVX2
+TARGET_AVX2
+void
+avx2_mqpoly_div_small(unsigned logn, const int8_t *g, const int8_t *f,
+        uint16_t *h, uint16_t *tmp)
+{
+	avx2_mqpoly_small_to_int(logn, f, tmp);
+	avx2_mqpoly_small_to_int(logn, g, h);
+	avx2_mqpoly_int_to_ntt(logn, tmp);
+	avx2_mqpoly_int_to_ntt(logn, h);
+	avx2_mqpoly_div_ntt(logn, h, tmp);
+	avx2_mqpoly_ntt_to_int(logn, h);
+	avx2_mqpoly_int_to_ext(logn, h);
+}
+#endif
 
 #if !FNDSA_ASM_CORTEXM4
 /* see inner.h */
@@ -421,6 +1100,72 @@ mqpoly_sqnorm_int_to_signed(unsigned logn, uint16_t *a)
 }
 #endif
 
+#if FNDSA_AVX2
+TARGET_AVX2
+uint32_t
+avx2_mqpoly_sqnorm_ext(unsigned logn, const uint16_t *a)
+{
+	if (logn >= 4) {
+		const __m256i *ap = (const __m256i *)a;
+		__m256i ys = _mm256_setzero_si256();
+		__m256i ysat = _mm256_setzero_si256();
+		__m256i qq = _mm256_set1_epi16(Q);
+		__m256i hq = _mm256_set1_epi16((Q - 1) >> 1);
+		for (size_t i = 0; i < (1u << (logn - 4)); i ++) {
+			__m256i y = _mm256_loadu_si256(ap + i);
+
+			/* Normalize to [-q/2,+q/2]. */
+			__m256i ym = _mm256_cmpgt_epi16(y, hq);
+			y = _mm256_sub_epi16(y, _mm256_and_si256(ym, qq));
+
+			/* Compute and add coefficient squares. */
+			__m256i ylo = _mm256_mullo_epi16(y, y);
+			__m256i yhi = _mm256_mulhi_epi16(y, y);
+			__m256i y0 = _mm256_blend_epi16(
+				ylo, _mm256_bslli_epi128(yhi, 2), 0xAA);
+			__m256i y1 = _mm256_blend_epi16(
+				_mm256_bsrli_epi128(ylo, 2), yhi, 0xAA);
+			ys = _mm256_add_epi32(ys, _mm256_add_epi32(y0, y1));
+
+			/* Since normalized values are at most floor(q/2)
+			   (i.e. 6144), the addition above added at most
+			   2*6144^2 = 75497472, which is (much) lower than
+			   2^31. If an overflow occurs at some point, then
+			   the corresponding slot must first go through
+			   a value with its high bit set. */
+			ysat = _mm256_or_si256(ysat, ys);
+		}
+
+		/* Finish the addition. We saturate to 2^32-1 if any of
+		   the overflow bits was set. */
+		ys = _mm256_add_epi32(ys, _mm256_srli_epi64(ys, 32));
+		ysat = _mm256_or_si256(ysat, ys);
+		ys = _mm256_add_epi32(ys, _mm256_bsrli_epi128(ys, 8));
+		ysat = _mm256_or_si256(ysat, ys);
+		__m128i xs = _mm_add_epi32(
+			_mm256_castsi256_si128(ys),
+			_mm256_extracti128_si256(ys, 1));
+		uint32_t r = (uint32_t)_mm_cvtsi128_si32(xs);
+		uint32_t sat = (uint32_t)_mm256_movemask_epi8(ysat);
+		sat = (sat & 0x88888888) | (r & 0x80000000);
+		sat |= -sat;
+		return r | (uint32_t)(*(int32_t *)&sat >> 31);
+	} else {
+		size_t n = (size_t)1 << logn;
+		uint32_t s = 0;
+		uint32_t sat = 0;
+		for (size_t i = 0; i < n; i ++) {
+			uint32_t x = a[i];
+			x -= Q & ((((Q - 1) >> 2) - x) >> 16);
+			int32_t y = *(int32_t *)&x;
+			s += (uint32_t)(y * y);
+			sat |= s;
+		}
+		s |= -(sat >> 31);
+		return s;
+	}
+}
+#endif
 
 #if !FNDSA_ASM_CORTEXM4
 /* see inner.h */
@@ -437,6 +1182,41 @@ mqpoly_sqnorm_signed(unsigned logn, const uint16_t *a)
 }
 #endif
 
+#if FNDSA_AVX2
+TARGET_AVX2
+uint32_t
+avx2_mqpoly_sqnorm_signed(unsigned logn, const uint16_t *a)
+{
+	if (logn >= 4) {
+		const __m256i *ap = (const __m256i *)a;
+		__m256i ys = _mm256_setzero_si256();
+		for (size_t i = 0; i < (1u << (logn - 4)); i ++) {
+			__m256i y = _mm256_loadu_si256(ap + i);
+			__m256i ylo = _mm256_mullo_epi16(y, y);
+			__m256i yhi = _mm256_mulhi_epi16(y, y);
+			__m256i y0 = _mm256_blend_epi16(
+				ylo, _mm256_bslli_epi128(yhi, 2), 0xAA);
+			__m256i y1 = _mm256_blend_epi16(
+				_mm256_bsrli_epi128(ylo, 2), yhi, 0xAA);
+			ys = _mm256_add_epi32(ys, _mm256_add_epi32(y0, y1));
+		}
+		ys = _mm256_add_epi32(ys, _mm256_srli_epi64(ys, 32));
+		ys = _mm256_add_epi32(ys, _mm256_bsrli_epi128(ys, 8));
+		__m128i xs = _mm_add_epi32(
+			_mm256_castsi256_si128(ys),
+			_mm256_extracti128_si256(ys, 1));
+		return (uint32_t)_mm_cvtsi128_si32(xs);
+	} else {
+		size_t n = (size_t)1 << logn;
+		uint32_t s = 0;
+		for (size_t i = 0; i < n; i ++) {
+			int32_t y = *(int16_t *)&a[i];
+			s += (uint32_t)(y * y);
+		}
+		return s;
+	}
+}
+#endif
 
 /* see inner.h */
 int

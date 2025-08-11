@@ -81,3 +81,45 @@ hash_to_point(unsigned logn,
 	}
 }
 
+#if FNDSA_AVX2
+#if defined __GNUC__ || defined __clang__
+#include <cpuid.h>
+__attribute__((target("xsave")))
+int
+has_avx2(void)
+{
+	/* __get_cpuid_count() includes a check that CPUID is callable,
+	   and that the requested leaf number is available. */
+	unsigned eax, ebx, ecx, edx;
+	if (__get_cpuid_count(7, 0, &eax, &ebx, &ecx, &edx)) {
+		/* Check AVX2 support by the hardware. */
+		if ((ebx & (1 << 5)) != 0) {
+			/* Also check that YMM registers have not been
+			   disabled by the OS. */
+			return (_xgetbv(0) & 0x06) == 0x06;
+		}
+	}
+	return 0;
+}
+#elif _MSC_VER
+int
+has_avx2(void)
+{
+	int rr[4];
+	/* Check that CPUID leaf 7 is accessible. */
+	__cpuid(rr, 0);
+	if (rr[0] < 7) {
+		return 0;
+	}
+	/* Check that the hardware supports AVX2. */
+	__cpuidex(rr, 7, 0);
+	if ((rr[1] & (1 << 5)) == 0) {
+		return 0;
+	}
+	/* Check that the YMM registers have not been disabled by the OS. */
+	return (_xgetbv(0) & 0x06) == 0x06;
+}
+#else
+#error Missing has_avx2() implementation (not GCC/Clang/MSVC)
+#endif
+#endif

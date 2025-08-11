@@ -351,6 +351,145 @@ fpr_mul2e(fpr x, unsigned e)
  * such extra optimizations.
  */
 
+#if FNDSA_RV64D
+/* We wrap the type in a structure so that any attempt at applying
+   arithmetic operators on f64 values triggers a compilation error.
+   Since the wrapper is trivial and all these functions should be always
+   inlined, this wrapper should have no extra runtime cost. */
+typedef struct { double v; } f64;
+
+static inline f64
+f64_from_raw(fpr r)
+{
+	f64 d;
+	__asm__ ("fmv.d.x  %0, %1" : "=f" (d.v) : "r" (r));
+	return d;
+}
+
+static inline fpr
+f64_to_raw(f64 a)
+{
+	fpr r;
+	__asm__ ("fmv.x.d  %0, %1" : "=r" (r) : "f" (a.v));
+	return r;
+}
+
+static inline f64
+f64_add(f64 a, f64 b)
+{
+	f64 d;
+	__asm__ ("fadd.d  %0, %1, %2" : "=f" (d.v) : "f" (a.v), "f" (b.v));
+	return d;
+}
+
+static inline f64
+f64_sub(f64 a, f64 b)
+{
+	f64 d;
+	__asm__ ("fsub.d  %0, %1, %2" : "=f" (d.v) : "f" (a.v), "f" (b.v));
+	return d;
+}
+
+static inline f64
+f64_neg(f64 a)
+{
+	f64 d;
+	__asm__ ("fsgnjn.d  %0, %1, %1" : "=f" (d.v) : "f" (a.v));
+	return d;
+}
+
+static inline f64
+f64_mul(f64 a, f64 b)
+{
+	f64 d;
+	__asm__ ("fmul.d  %0, %1, %2" : "=f" (d.v) : "f" (a.v), "f" (b.v));
+	return d;
+}
+
+static inline f64
+f64_sqr(f64 a)
+{
+	return f64_mul(a, a);
+}
+
+#if FNDSA_DIV_EMU
+static inline f64
+f64_div(f64 a, f64 b)
+{
+	return f64_from_raw(fpr_div(f64_to_raw(a), f64_to_raw(b)));
+}
+#else
+static inline f64
+f64_div(f64 a, f64 b)
+{
+	f64 d;
+	__asm__ ("fdiv.d  %0, %1, %2" : "=f" (d.v) : "f" (a.v), "f" (b.v));
+	return d;
+}
+#endif
+
+static inline f64
+f64_inv(f64 a)
+{
+	return f64_div((f64){ 1.0 }, a);
+}
+
+static inline f64
+f64_half(f64 a)
+{
+	return f64_mul((f64){ 0.5 }, a);
+}
+
+#if FNDSA_SQRT_EMU
+static inline f64
+f64_sqrt(f64 a)
+{
+	return f64_from_raw(fpr_sqrt(f64_to_raw(a)));
+}
+#else
+static inline f64
+f64_sqrt(f64 a)
+{
+	f64 d;
+	__asm__ ("fsqrt.d  %0, %1" : "=f" (d.v) : "f" (a.v));
+	return d;
+}
+#endif
+
+static inline f64
+f64_of(int64_t x)
+{
+	f64 d;
+	__asm__ ("fcvt.d.l  %0, %1" : "=f" (d.v) : "r" (x));
+	return d;
+}
+
+#define f64_of32(x)   f64_of((int64_t)(x))
+
+static inline int64_t
+f64_rint(f64 a)
+{
+	int64_t x;
+	__asm__ ("fcvt.l.d  %0, %1, rne" : "=r" (x) : "f" (a.v));
+	return x;
+}
+
+static inline int64_t
+f64_trunc(f64 a)
+{
+	int64_t x;
+	__asm__ ("fcvt.l.d  %0, %1, rtz" : "=r" (x) : "f" (a.v));
+	return x;
+}
+
+static inline int64_t
+f64_floor(f64 a)
+{
+	int64_t x;
+	__asm__ ("fcvt.l.d  %0, %1, rdn" : "=r" (x) : "f" (a.v));
+	return x;
+}
+#endif
 
 /* ==================================================================== */
 /*

@@ -78,6 +78,7 @@ fpr_scaled(int64_t i, int sc)
 }
 #endif
 
+#if !FNDSA_SSE2 && !FNDSA_NEON
 
 #if !FNDSA_ASM_CORTEXM4
 /* see sign_inner.h */
@@ -329,3 +330,4 @@ fpr_sqrt(fpr x)
 }
 #endif
 
+#endif

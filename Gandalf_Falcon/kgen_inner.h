@@ -204,6 +204,122 @@ typedef struct {
 #define PRIMES   fndsa_PRIMES
 extern const small_prime PRIMES[];
 
+#if FNDSA_AVX2
+TARGET_AVX2
+static inline __m256i
+mp_set_x8(__m256i yv, __m256i yp)
+{
+	return _mm256_add_epi32(yv, _mm256_and_si256(yp,
+		_mm256_srai_epi32(yv, 31)));
+}
+
+TARGET_AVX2
+static inline __m256i
+mp_norm_x8(__m256i yv, __m256i yp, __m256i yhp)
+{
+	return _mm256_sub_epi32(yv, _mm256_and_si256(yp,
+		_mm256_cmpgt_epi32(yv, yhp)));
+}
+
+TARGET_AVX2
+static inline __m256i
+mp_add_x8(__m256i ya, __m256i yb, __m256i yp)
+{
+	__m256i yd = _mm256_sub_epi32(_mm256_add_epi32(ya, yb), yp);
+	return _mm256_add_epi32(yd, _mm256_and_si256(yp,
+		_mm256_srai_epi32(yd, 31)));
+}
+
+TARGET_AVX2
+static inline __m256i
+mp_sub_x8(__m256i ya, __m256i yb, __m256i yp)
+{
+	__m256i yd = _mm256_sub_epi32(ya, yb);
+	return _mm256_add_epi32(yd, _mm256_and_si256(yp,
+		_mm256_srai_epi32(yd, 31)));
+}
+
+TARGET_AVX2
+static inline __m256i
+mp_half_x8(__m256i ya, __m256i yp)
+{
+	return _mm256_srli_epi32(
+		_mm256_add_epi32(ya, _mm256_and_si256(yp,
+			_mm256_sub_epi32(_mm256_setzero_si256(),
+			_mm256_and_si256(ya, _mm256_set1_epi32(1))))), 1);
+}
+
+/* Input:
+      ya = a0 : XX : a1 : XX : a2 : XX : a3 : XX
+      yb = b0 : XX : b1 : XX : b2 : XX : b3 : XX
+   Output:
+      mm(a0,b0) : 00 : mm(a1,b1) : 00 : mm(a2,b2) : 00 : mm(a3,b3) : 00  */
+TARGET_AVX2
+static inline __m256i
+mp_mmul_x4(__m256i ya, __m256i yb, __m256i yp, __m256i yp0i)
+{
+	__m256i yd = _mm256_mul_epu32(ya, yb);
+	__m256i ye = _mm256_mul_epu32(yd, yp0i);
+	ye = _mm256_mul_epu32(ye, yp);
+	yd = _mm256_srli_epi64(_mm256_add_epi64(yd, ye), 32);
+	yd = _mm256_sub_epi32(yd, yp);
+	return _mm256_add_epi32(yd, _mm256_and_si256(yp,
+		_mm256_srai_epi32(yd, 31)));
+}
+
+TARGET_AVX2
+static inline __m256i
+mp_mmul_x8(__m256i ya, __m256i yb, __m256i yp, __m256i yp0i)
+{
+	/* yd0 <- a0*b0 : a2*b2 (+high lane) */
+	__m256i yd0 = _mm256_mul_epu32(ya, yb);
+	/* yd1 <- a1*b1 : a3*b3 (+high lane) */
+	__m256i yd1 = _mm256_mul_epu32(
+		_mm256_srli_epi64(ya, 32),
+		_mm256_srli_epi64(yb, 32));
+
+	__m256i ye0 = _mm256_mul_epu32(yd0, yp0i);
+	__m256i ye1 = _mm256_mul_epu32(yd1, yp0i);
+	ye0 = _mm256_mul_epu32(ye0, yp);
+	ye1 = _mm256_mul_epu32(ye1, yp);
+	yd0 = _mm256_add_epi64(yd0, ye0);
+	yd1 = _mm256_add_epi64(yd1, ye1);
+
+	/* yf0 <- lo(d0) : lo(d1) : hi(d0) : hi(d1) (+high lane) */
+	__m256i yf0 = _mm256_unpacklo_epi32(yd0, yd1);
+	/* yf1 <- lo(d2) : lo(d3) : hi(d2) : hi(d3) (+high lane) */
+	__m256i yf1 = _mm256_unpackhi_epi32(yd0, yd1);
+	/* yg <- hi(d0) : hi(d1) : hi(d2) : hi(d3) (+high lane) */
+	__m256i yg = _mm256_unpackhi_epi64(yf0, yf1);
+	/* Alternate version (instead of the three unpack above) but it
+	   seems to be slightly slower.
+	__m256i yg = _mm256_blend_epi32(_mm256_srli_epi64(yd0, 32), yd1, 0xAA);
+	 */
+
+	yg = _mm256_sub_epi32(yg, yp);
+	return _mm256_add_epi32(yg, _mm256_and_si256(yp,
+		_mm256_srai_epi32(yg, 31)));
+}
+
+#define avx2_mp_mkgmigm   fndsa_avx2_mp_mkgmigm
+void avx2_mp_mkgmigm(unsigned logn,
+	uint32_t *restrict gm, uint32_t *restrict igm,
+	uint32_t g, uint32_t ig, uint32_t p, uint32_t p0i);
+#define avx2_mp_mkgm   fndsa_avx2_mp_mkgm
+void avx2_mp_mkgm(unsigned logn, uint32_t *restrict gm,
+	uint32_t g, uint32_t p, uint32_t p0i);
+#define avx2_mp_mkigm   fndsa_avx2_mp_mkigm
+void avx2_mp_mkigm(unsigned logn, uint32_t *restrict igm,
+	uint32_t ig, uint32_t p, uint32_t p0i);
+#define avx2_mp_NTT   fndsa_avx2_mp_NTT
+void avx2_mp_NTT(unsigned logn,
+	uint32_t *restrict a, const uint32_t *restrict gm,
+	uint32_t p, uint32_t p0i);
+#define avx2_mp_iNTT   fndsa_avx2_mp_iNTT
+void avx2_mp_iNTT(unsigned logn,
+	uint32_t *restrict a, const uint32_t *restrict igm,
+	uint32_t p, uint32_t p0i);
+#endif
 
 /* ==================================================================== */
 /*
@@ -327,6 +443,36 @@ void zint_sub_scaled(uint32_t *restrict x, size_t xlen,
 	const uint32_t *restrict y, size_t ylen, size_t stride,
 	uint32_t sch, uint32_t scl);
 
+#if FNDSA_AVX2
+#define avx2_zint_mod_small_unsigned_x8   fndsa_avx2_zint_mod_small_unsigned_x8
+TARGET_AVX2 __m256i avx2_zint_mod_small_unsigned_x8(
+	const uint32_t *d, size_t len, size_t stride,
+	__m256i yp, __m256i yp0i, __m256i yR2);
+#define avx2_zint_add_mul_small_x8   fndsa_avx2_zint_add_mul_small_x8
+TARGET_AVX2 void avx2_zint_add_mul_small_x8(
+	uint32_t *restrict d, size_t len, size_t dstride,
+	const uint32_t *restrict a, __m256i ys);
+#define avx2_zint_rebuild_CRT   fndsa_avx2_zint_rebuild_CRT
+void avx2_zint_rebuild_CRT(uint32_t *restrict xx, size_t xlen, size_t n,
+	size_t num_sets, int normalize_signed, uint32_t *restrict tmp);
+
+TARGET_AVX2
+static inline __m256i
+zint_mod_small_signed_x8(const uint32_t *d, size_t len, size_t stride,
+        __m256i yp, __m256i yp0i, __m256i yR2, __m256i yRx)
+{
+	if (len == 0) {
+		return _mm256_setzero_si256();
+	}
+	__m256i yz = avx2_zint_mod_small_unsigned_x8(
+		d, len, stride, yp, yp0i, yR2);
+	__m256i yl = _mm256_loadu_si256((__m256i *)(d + (len - 1) * stride));
+	__m256i ym = _mm256_sub_epi32(_mm256_setzero_si256(),
+		_mm256_srli_epi32(yl, 30));
+	yz = mp_sub_x8(yz, _mm256_and_si256(yRx, ym), yp);
+	return yz;
+}
+#endif
 
 /* ==================================================================== */
 /*
@@ -616,6 +762,122 @@ void vect_norm_fft(unsigned logn, fxr *restrict d,
 void vect_invnorm_fft(unsigned logn, fxr *restrict d,
 	const fxr *restrict a, const fxr *restrict b, unsigned e);
 
+#if FNDSA_AVX2
+TARGET_AVX2
+static inline __m256i
+fxr_mul_x4(__m256i ya, __m256i yb)
+{
+	__m256i ya_hi = _mm256_srli_epi64(ya, 32);
+	__m256i yb_hi = _mm256_srli_epi64(yb, 32);
+	__m256i y1 = _mm256_mul_epu32(ya, yb);
+	__m256i y2 = _mm256_mul_epu32(ya, yb_hi);
+	__m256i y3 = _mm256_mul_epu32(ya_hi, yb);
+	__m256i y4 = _mm256_mul_epu32(ya_hi, yb_hi);
+	y1 = _mm256_srli_epi64(y1, 32);
+	y4 = _mm256_slli_epi64(y4, 32);
+	__m256i y5 = _mm256_add_epi64(
+		_mm256_add_epi64(y1, y2),
+		_mm256_add_epi64(y3, y4));
+	__m256i yna = _mm256_srai_epi32(ya, 31);
+	__m256i ynb = _mm256_srai_epi32(yb, 31);
+	return _mm256_sub_epi64(y5,
+		_mm256_add_epi64(
+			_mm256_and_si256(_mm256_slli_epi64(yb, 32), yna),
+			_mm256_and_si256(_mm256_slli_epi64(ya, 32), ynb)));
+}
+
+TARGET_AVX2
+static inline __m256i
+fxr_sqr_x4(__m256i ya)
+{
+	__m256i ya_hi = _mm256_srli_epi64(ya, 32);
+	__m256i y1 = _mm256_mul_epu32(ya, ya);
+	__m256i y2 = _mm256_mul_epu32(ya, ya_hi);
+	__m256i y3 = _mm256_mul_epu32(ya_hi, ya_hi);
+	y1 = _mm256_srli_epi64(y1, 32);
+	y2 = _mm256_add_epi64(y2, y2);
+	y3 = _mm256_slli_epi64(y3, 32);
+	__m256i y4 = _mm256_add_epi64(_mm256_add_epi64(y1, y2), y3);
+	return _mm256_sub_epi64(y4,
+		_mm256_and_si256(_mm256_slli_epi64(ya, 33),
+		_mm256_srai_epi32(ya, 31)));
+}
+
+TARGET_AVX2
+static inline __m256i
+fxr_half_x4(__m256i ya)
+{
+	const __m256i y1 = _mm256_set1_epi64x(1);
+	const __m256i yh = _mm256_set1_epi64x((uint64_t)1 << 63);
+	ya = _mm256_add_epi64(ya, y1);
+	return _mm256_or_si256(
+		_mm256_srli_epi64(ya, 1),
+		_mm256_and_si256(ya, yh));
+}
+
+#define avx2_fxr_div_x4   fndsa_avx2_fxr_div_x4
+TARGET_AVX2 __m256i avx2_fxr_div_x4(__m256i yn, __m256i yd);
+
+TARGET_AVX2
+static inline void
+fxr_div_x4_1(fxr *n0, fxr *n1, fxr *n2, fxr *n3, fxr d)
+{
+	__m256i yn = _mm256_setr_epi64x(n0->v, n1->v, n2->v, n3->v);
+	__m256i yd = _mm256_set1_epi64x(d.v);
+	union {
+		__m256i y;
+		uint64_t q[4];
+	} z;
+	z.y = avx2_fxr_div_x4(yn, yd);
+	n0->v = z.q[0];
+	n1->v = z.q[1];
+	n2->v = z.q[2];
+	n3->v = z.q[3];
+}
+
+TARGET_AVX2
+static inline void
+fxc_mul_x4(__m256i *yd_re, __m256i *yd_im,
+        __m256i ya_re, __m256i ya_im, __m256i yb_re, __m256i yb_im)
+{
+	__m256i y0 = fxr_mul_x4(ya_re, yb_re);
+	__m256i y1 = fxr_mul_x4(ya_im, yb_im);
+	__m256i y2 = fxr_mul_x4(
+		_mm256_add_epi64(ya_re, ya_im),
+		_mm256_add_epi64(yb_re, yb_im));
+	*yd_re = _mm256_sub_epi64(y0, y1);
+	*yd_im = _mm256_sub_epi64(y2, _mm256_add_epi64(y0, y1));
+}
+
+#define avx2_vect_FFT   fndsa_avx2_vect_FFT
+void avx2_vect_FFT(unsigned logn, fxr *f);
+#define avx2_vect_iFFT   fndsa_avx2_vect_iFFT
+void avx2_vect_iFFT(unsigned logn, fxr *f);
+#define avx2_vect_set   fndsa_avx2_vect_set
+void avx2_vect_set(unsigned logn, fxr *d, const int8_t *f);
+#define avx2_vect_add   fndsa_avx2_vect_add
+void avx2_vect_add(unsigned logn, fxr *restrict a, const fxr *restrict b);
+#define avx2_vect_mul_realconst   fndsa_avx2_vect_mul_realconst
+void avx2_vect_mul_realconst(unsigned logn, fxr *a, fxr c);
+#define avx2_vect_mul2e   fndsa_avx2_vect_mul2e
+void avx2_vect_mul2e(unsigned logn, fxr *a, unsigned e);
+#define avx2_vect_mul_fft   fndsa_avx2_vect_mul_fft
+void avx2_vect_mul_fft(unsigned logn, fxr *restrict a, const fxr *restrict b);
+#define avx2_vect_adj_fft   fndsa_avx2_vect_adj_fft
+void avx2_vect_adj_fft(unsigned logn, fxr *a);
+#define avx2_vect_mul_selfadj_fft   fndsa_avx2_vect_mul_selfadj_fft
+void avx2_vect_mul_selfadj_fft(unsigned logn,
+	fxr *restrict a, const fxr *restrict b);
+#define avx2_vect_div_selfadj_fft   fndsa_avx2_vect_div_selfadj_fft
+void avx2_vect_div_selfadj_fft(unsigned logn,
+	fxr *restrict a, const fxr *restrict b);
+#define avx2_vect_norm_fft   fndsa_avx2_vect_norm_fft
+void avx2_vect_norm_fft(unsigned logn, fxr *restrict d,
+	const fxr *restrict a, const fxr *restrict b);
+#define avx2_vect_invnorm_fft   fndsa_avx2_vect_invnorm_fft
+void avx2_vect_invnorm_fft(unsigned logn, fxr *restrict d,
+	const fxr *restrict a, const fxr *restrict b, unsigned e);
+#endif
 
 /* ==================================================================== */
 /*
@@ -749,6 +1011,33 @@ void poly_sub_kfg_scaled_depth1(unsigned logn_top,
 #define poly_sqnorm   fndsa_poly_sqnorm
 uint32_t poly_sqnorm(unsigned logn, const int8_t *f);
 
+#if FNDSA_AVX2
+#define avx2_poly_mp_set_small   fndsa_avx2_poly_mp_set_small
+void avx2_poly_mp_set_small(unsigned logn, uint32_t *restrict d,
+	const int8_t *restrict f, uint32_t p);
+#define avx2_poly_mp_set   fndsa_avx2_poly_mp_set
+void avx2_poly_mp_set(unsigned logn, uint32_t *f, uint32_t p);
+#define avx2_poly_mp_norm   fndsa_avx2_poly_mp_norm
+void avx2_poly_mp_norm(unsigned logn, uint32_t *f, uint32_t p);
+#define avx2_poly_sub_scaled   fndsa_avx2_poly_sub_scaled
+void avx2_poly_sub_scaled(unsigned logn,
+	uint32_t *restrict F, size_t Flen,
+	const uint32_t *restrict f, size_t flen,
+	const int32_t *restrict k, uint32_t sc);
+#define avx2_poly_sub_scaled_ntt   fndsa_avx2_poly_sub_scaled_ntt
+void
+avx2_poly_sub_scaled_ntt(unsigned logn, uint32_t *restrict F, size_t Flen,
+	const uint32_t *restrict f, size_t flen,
+	const int32_t *restrict k, uint32_t sc, uint32_t *restrict tmp);
+#define avx2_poly_sub_kfg_scaled_depth1   fndsa_avx2_poly_sub_kfg_scaled_depth1
+void avx2_poly_sub_kfg_scaled_depth1(unsigned logn_top,
+	uint32_t *restrict F, uint32_t *restrict G, size_t FGlen,
+	uint32_t *restrict k, uint32_t sc,
+	const int8_t *restrict f, const int8_t *restrict g,
+	uint32_t *restrict tmp);
+#define avx2_poly_sqnorm   fndsa_avx2_poly_sqnorm
+uint32_t avx2_poly_sqnorm(unsigned logn, const int8_t *f);
+#endif
 
 /* ==================================================================== */
 /*
@@ -782,6 +1071,14 @@ int solve_NTRU(unsigned logn,
 int check_ortho_norm(unsigned logn,
 	const int8_t *f, const int8_t *g, fxr *tmp);
 
+#if FNDSA_AVX2
+#define avx2_solve_NTRU   fndsa_avx2_solve_NTRU
+int avx2_solve_NTRU(unsigned logn,
+        const int8_t *restrict f, const int8_t *restrict g, uint32_t *tmp);
+#define avx2_check_ortho_norm   fndsa_avx2_check_ortho_norm
+int avx2_check_ortho_norm(unsigned logn,
+	const int8_t *f, const int8_t *g, fxr *tmp);
+#endif
 
 /* ==================================================================== */
 /*

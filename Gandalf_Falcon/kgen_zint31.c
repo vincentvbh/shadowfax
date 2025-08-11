@@ -41,6 +41,27 @@ zint_mod_small_unsigned(const uint32_t *d, size_t len, size_t stride,
 	return x;
 }
 
+#if FNDSA_AVX2
+TARGET_AVX2
+__m256i
+avx2_zint_mod_small_unsigned_x8(const uint32_t *d, size_t len, size_t stride,
+	__m256i yp, __m256i yp0i, __m256i yR2)
+{
+	__m256i yx = _mm256_setzero_si256();
+	__m256i yz = mp_half_x8(yR2, yp);
+	d += len * stride;
+	for (size_t i = len; i > 0; i --) {
+		d -= stride;
+		__m256i yw = _mm256_sub_epi32(
+			_mm256_loadu_si256((__m256i *)d), yp);
+		yw = _mm256_add_epi32(yw,
+			_mm256_and_si256(yp, _mm256_srai_epi32(yw, 31)));
+		yx = mp_mmul_x8(yx, yz, yp, yp0i);
+		yx = mp_add_x8(yx, yw, yp);
+	}
+	return yx;
+}
+#endif
 
 /* see kgen_inner.h */
 void
@@ -62,6 +83,39 @@ zint_add_mul_small(uint32_t *restrict x, size_t len, size_t xstride,
 	*x = cc;
 }
 
+#if FNDSA_AVX2
+TARGET_AVX2
+void
+avx2_zint_add_mul_small_x8(uint32_t *restrict d, size_t len, size_t dstride,
+	const uint32_t *restrict a, __m256i ys)
+{
+	__m256i cc0 = _mm256_setzero_si256();
+	__m256i cc1 = _mm256_setzero_si256();
+	__m256i ys0 = ys;
+	__m256i ys1 = _mm256_srli_epi64(ys, 32);
+	__m256i yw32 = _mm256_set1_epi64x(0xFFFFFFFF);
+	__m256i ym31 = _mm256_set1_epi32(0x7FFFFFFF);
+	for (size_t i = 0; i < len; i ++) {
+		__m256i ya = _mm256_set1_epi64x(a[i]);
+		__m256i z0 = _mm256_mul_epu32(ya, ys0);
+		__m256i z1 = _mm256_mul_epu32(ya, ys1);
+		__m256i yd = _mm256_loadu_si256((__m256i *)d);
+		__m256i yd0 = _mm256_and_si256(yd, yw32);
+		__m256i yd1 = _mm256_srli_epi64(yd, 32);
+		z0 = _mm256_add_epi64(z0, _mm256_add_epi64(yd0, cc0));
+		z1 = _mm256_add_epi64(z1, _mm256_add_epi64(yd1, cc1));
+		cc0 = _mm256_srli_epi64(z0, 31);
+		cc1 = _mm256_srli_epi64(z1, 31);
+		yd = _mm256_blend_epi32(z0, _mm256_slli_epi64(z1, 32), 0xAA);
+		_mm256_storeu_si256((__m256i *)d, _mm256_and_si256(yd, ym31));
+		d += dstride;
+	}
+
+	_mm256_storeu_si256((__m256i *)d,
+		_mm256_and_si256(_mm256_blend_epi32(
+			cc0, _mm256_slli_epi64(cc1, 32), 0xAA), ym31));
+}
+#endif
 
 /* see kgen_inner.h */
 void
@@ -118,6 +172,72 @@ zint_norm_zero(uint32_t *restrict x, size_t len, size_t xstride,
 	}
 }
 
+#if FNDSA_AVX2
+TARGET_AVX2
+static void
+zint_norm_zero_x8(uint32_t *restrict x, size_t len, size_t xstride,
+	const uint32_t *restrict m)
+{
+	/*
+	 * Compare x with m/2. We use the shifted version of m, and m
+	 * is odd, so we really compare with (m-1)/2; we want to perform
+	 * the subtraction if and only if x > (m-1)/2.
+	 */
+	__m256i yr = _mm256_setzero_si256();
+	__m256i yone = _mm256_set1_epi32(1);
+	uint32_t bb = 0;
+	x += len * xstride;
+	size_t i = len;
+	while (i -- > 0) {
+		x -= xstride;
+		/*
+		 * Get the two words to compare in wx and wp (both over
+		 * 31 bits exactly).
+		 */
+		__m256i yx = _mm256_loadu_si256((__m256i *)x);
+		uint32_t wp = (m[i] >> 1) | (bb << 30);
+		bb = m[i] & 1;
+
+		/*
+		 * We set cc to -1, 0 or 1, depending on whether wp is
+		 * lower than, equal to, or greater than wx.
+		 */
+		__m256i ycc = _mm256_sub_epi32(_mm256_set1_epi32(wp), yx);
+		ycc = _mm256_or_si256(
+			_mm256_srli_epi32(_mm256_sub_epi32(
+				_mm256_setzero_si256(), ycc), 31),
+			_mm256_srai_epi32(ycc, 31));
+
+		/*
+		 * If r != 0 then it is either 1 or -1, and we keep its
+		 * value. Otherwise, if r = 0, then we replace it with cc.
+		 */
+		yr = _mm256_or_si256(yr, _mm256_and_si256(ycc,
+			_mm256_sub_epi32(_mm256_and_si256(yr, yone), yone)));
+	}
+
+	/*
+	 * At this point, r = -1, 0 or 1, depending on whether (m-1)/2
+	 * is lower than, equal to, or greater than x. We thus want to
+	 * do the subtraction only if r = -1.
+	 */
+	__m256i ycc = _mm256_setzero_si256();
+	__m256i ym = _mm256_srai_epi32(yr, 31);
+	__m256i y31 = _mm256_set1_epi32(0x7FFFFFFF);
+	for (size_t j = 0; j < len; j ++) {
+		__m256i yx = _mm256_loadu_si256((__m256i *)x);
+		__m256i y = _mm256_sub_epi32(
+			_mm256_sub_epi32(yx, ycc),
+			_mm256_set1_epi32(m[j]));
+		ycc = _mm256_srli_epi32(y, 31);
+		yx = _mm256_or_si256(
+			_mm256_andnot_si256(ym, yx),
+			_mm256_and_si256(ym, _mm256_and_si256(y, y31)));
+		_mm256_storeu_si256((__m256i *)x, yx);
+		x += xstride;
+	}
+}
+#endif
 
 /* see kgen_inner.h */
 void
@@ -184,6 +304,91 @@ zint_rebuild_CRT(uint32_t *restrict xx, size_t xlen, size_t n,
 	}
 }
 
+#if FNDSA_AVX2
+TARGET_AVX2
+void
+avx2_zint_rebuild_CRT(uint32_t *restrict xx, size_t xlen, size_t n,
+	size_t num_sets, int normalize_signed, uint32_t *restrict tmp)
+{
+	size_t uu = 0;
+	tmp[0] = PRIMES[0].p;
+	for (size_t i = 1; i < xlen; i ++) {
+		/*
+		 * At the entry of each loop iteration:
+		 *  - the first i words of each array have been
+		 *    reassembled;
+		 *  - the first i words of tmp[] contains the
+		 * product of the prime moduli processed so far.
+		 *
+		 * We call 'q' the product of all previous primes.
+		 */
+		uint32_t p = PRIMES[i].p;
+		uint32_t p0i = PRIMES[i].p0i;
+		uint32_t R2 = PRIMES[i].R2;
+		uint32_t s = PRIMES[i].s;
+		__m256i yp = _mm256_set1_epi32(p);
+		__m256i yp0i = _mm256_set1_epi32(p0i);
+		__m256i yR2 = _mm256_set1_epi32(R2);
+		__m256i ys = _mm256_set1_epi32(s);
+		uu += n;
+		size_t kk = 0;
+		for (size_t k = 0; k < num_sets; k ++) {
+			size_t j = 0;
+			for (; (j + 7) < n; j += 8) {
+				__m256i y1 = _mm256_loadu_si256(
+					(__m256i *)(xx + kk + uu + j));
+				__m256i y2 = avx2_zint_mod_small_unsigned_x8(
+					xx + kk + j, i, n, yp, yp0i, yR2);
+				__m256i yr = mp_mmul_x8(ys,
+					mp_sub_x8(y1, y2, yp), yp, yp0i);
+				avx2_zint_add_mul_small_x8(
+					xx + kk + j, i, n, tmp, yr);
+			}
+			for (; j < n; j ++) {
+				/*
+				 * xp = the integer x modulo the prime p for
+				 *      this iteration
+				 * xq = (x mod q) mod p
+				 */
+				uint32_t xp = xx[kk + j + uu];
+				uint32_t xq = zint_mod_small_unsigned(
+					xx + kk + j, i, n, p, p0i, R2);
+
+				/*
+				 * New value is:
+				 *   (x mod q) + q*(s*(xp - xq) mod p)
+				 */
+				uint32_t xr = mp_mmul(
+					s, mp_sub(xp, xq, p), p, p0i);
+				zint_add_mul_small(xx + kk + j, i, n, tmp, xr);
+			}
+			kk += n * xlen;
+		}
+
+		/*
+		 * Update product of primes in tmp[].
+		 */
+		tmp[i] = zint_mul_small(tmp, i, p);
+	}
+
+	/*
+	 * Normalize the reconstructed values around 0.
+	 */
+	if (normalize_signed) {
+		size_t kk = 0;
+		for (size_t k = 0; k < num_sets; k ++) {
+			size_t j = 0;
+			for (; (j + 7) < n; j += 8) {
+				zint_norm_zero_x8(xx + kk + j, xlen, n, tmp);
+			}
+			for (; j < n; j ++) {
+				zint_norm_zero(xx + kk + j, xlen, n, tmp);
+			}
+			kk += n * xlen;
+		}
+	}
+}
+#endif
 
 /* see kgen_inner.h */
 void

@@ -54,6 +54,67 @@ inner_fxr_div(uint64_t x, uint64_t y)
 	return q;
 }
 
+#if FNDSA_AVX2
+/* see kgen_inner.h */
+TARGET_AVX2
+__m256i
+avx2_fxr_div_x4(__m256i yn, __m256i yd)
+{
+	/*
+	 * Get absolute values and signs. From now on, we can suppose
+	 * that n and d fit on 63 bits (we ignore edge conditions).
+	 */
+	__m256i ysn = _mm256_sub_epi64(_mm256_setzero_si256(),
+		_mm256_srli_epi64(yn, 63));
+	__m256i ysd = _mm256_sub_epi64(_mm256_setzero_si256(),
+		_mm256_srli_epi64(yd, 63));
+	yn = _mm256_sub_epi64(_mm256_xor_si256(yn, ysn), ysn);
+	yd = _mm256_sub_epi64(_mm256_xor_si256(yd, ysd), ysd);
+
+	/*
+	 * Do a bit by bit division, assuming that the quotient fits.
+	 * The numerator starts at n*2^31, and is shifted one bit a time.
+	 */
+	__m256i yq = _mm256_setzero_si256();
+	__m256i ynum = _mm256_srli_epi64(yn, 31);
+	__m256i y1 = _mm256_set1_epi64x(1);
+	for (int i = 63; i >= 33; i --) {
+		__m256i yb = _mm256_srli_epi64(_mm256_sub_epi64(ynum, yd), 63);
+		__m256i yc = _mm256_sub_epi64(yb, y1);
+		yq = _mm256_add_epi64(yq, yq);
+		yq = _mm256_sub_epi64(yq, yc);
+		ynum = _mm256_sub_epi64(ynum, _mm256_and_si256(yc, yd));
+		ynum = _mm256_add_epi64(ynum, ynum);
+		ynum = _mm256_or_si256(ynum,
+			_mm256_and_si256(_mm256_srli_epi64(yn, 30), y1));
+		yn = _mm256_add_epi64(yn, yn);
+	}
+	for (int i = 32; i >= 0; i --) {
+		__m256i yb = _mm256_srli_epi64(_mm256_sub_epi64(ynum, yd), 63);
+		__m256i yc = _mm256_sub_epi64(yb, y1);
+		yq = _mm256_add_epi64(yq, yq);
+		yq = _mm256_sub_epi64(yq, yc);
+		ynum = _mm256_sub_epi64(ynum, _mm256_and_si256(yc, yd));
+		ynum = _mm256_add_epi64(ynum, ynum);
+	}
+
+	/*
+	 * Rounding: if the remainder is at least d/2 (scaled), we add
+	 * 2^(-32) to the quotient.
+	 */
+	__m256i yb0 = _mm256_srli_epi64(_mm256_sub_epi64(ynum, yd), 63);
+	yq = _mm256_add_epi64(_mm256_xor_si256(y1, yb0), yq);
+
+	/*
+	 * Sign management: if the original yn and yd had different signs,
+	 * then we must negate the quotient.
+	 */
+	ysn = _mm256_xor_si256(ysn, ysd);
+	yq = _mm256_sub_epi64(_mm256_xor_si256(yq, ysn), ysn);
+
+	return yq;
+}
+#endif
 
 /*
  * Primitive 2048-th roots of unity, in the proper order for FFT.
@@ -1086,6 +1147,95 @@ static const fxc GM_TAB[1024] = {
 	FXC(18446744069414604533ull,             13176774ull)
 };
 
+#if FNDSA_AVX2
+TARGET_AVX2
+static inline void
+fxp_FFT4(__m256i *ya0_re, __m256i *ya1_re, __m256i *ya0_im, __m256i *ya1_im,
+	size_t k)
+{
+	__m256i yv0_re = *ya0_re;
+	__m256i yv1_re = *ya1_re;
+	__m256i yv0_im = *ya0_im;
+	__m256i yv1_im = *ya1_im;
+	__m256i yt0_re, yt0_im, yt1_re, yt1_im;
+
+	/*
+	 * yv0: 0:1:2:3
+	 * yv1: 4:5:6:7
+	 * combine 0/2 and 1/3 with gm[k+0]
+	 * combine 4/6 and 5/7 with gm[k+1]
+	 */
+
+	/* yt0 <- 0:1:4:5
+	   yt1 <- 2:3:6:7 */
+	yt0_re = _mm256_permute2x128_si256(yv0_re, yv1_re, 0x20);
+	yt0_im = _mm256_permute2x128_si256(yv0_im, yv1_im, 0x20);
+	yt1_re = _mm256_permute2x128_si256(yv0_re, yv1_re, 0x31);
+	yt1_im = _mm256_permute2x128_si256(yv0_im, yv1_im, 0x31);
+
+	/* yg0 <- gm0:gm0:gm1:gm1 */
+	__m256i yg0 = _mm256_loadu_si256((const __m256i *)(GM_TAB + k));
+	__m256i yg0_re = _mm256_shuffle_epi32(yg0, 0x44);
+	__m256i yg0_im = _mm256_shuffle_epi32(yg0, 0xEE);
+
+	fxc_mul_x4(&yt1_re, &yt1_im, yt1_re, yt1_im, yg0_re, yg0_im);
+
+	yv0_re = _mm256_add_epi64(yt0_re, yt1_re);
+	yv0_im = _mm256_add_epi64(yt0_im, yt1_im);
+	yv1_re = _mm256_sub_epi64(yt0_re, yt1_re);
+	yv1_im = _mm256_sub_epi64(yt0_im, yt1_im);
+
+	/*
+	 * v0: 0:1:4:5
+	 * v1: 2:3:6:7
+	 * combine 0/1 with gm[2*k+0], 2/3 with gm[2*k+1]
+	 * combine 4/5 with gm[2*k+2], 6/7 with gm[2*k+3]
+	 */
+
+	/* yt0 <- 0:2:4:6
+	   yt1 <- 1:3:5:7 */
+	yt0_re = _mm256_unpacklo_epi64(yv0_re, yv1_re);
+	yt0_im = _mm256_unpacklo_epi64(yv0_im, yv1_im);
+	yt1_re = _mm256_unpackhi_epi64(yv0_re, yv1_re);
+	yt1_im = _mm256_unpackhi_epi64(yv0_im, yv1_im);
+
+	/* yg1 <- gm4:gm5:gm6:gm7 */
+	__m256i yg1_re = _mm256_setr_epi64x(
+		GM_TAB[(k << 1) + 0].re.v,
+		GM_TAB[(k << 1) + 1].re.v,
+		GM_TAB[(k << 1) + 2].re.v,
+		GM_TAB[(k << 1) + 3].re.v);
+	__m256i yg1_im = _mm256_setr_epi64x(
+		GM_TAB[(k << 1) + 0].im.v,
+		GM_TAB[(k << 1) + 1].im.v,
+		GM_TAB[(k << 1) + 2].im.v,
+		GM_TAB[(k << 1) + 3].im.v);
+
+	fxc_mul_x4(&yt1_re, &yt1_im, yt1_re, yt1_im, yg1_re, yg1_im);
+
+	yv0_re = _mm256_add_epi64(yt0_re, yt1_re);
+	yv0_im = _mm256_add_epi64(yt0_im, yt1_im);
+	yv1_re = _mm256_sub_epi64(yt0_re, yt1_re);
+	yv1_im = _mm256_sub_epi64(yt0_im, yt1_im);
+
+	/*
+	 * Reorder into 0:1:2:3 and 4:5:6:7
+	 */
+	yt0_re = _mm256_unpacklo_epi64(yv0_re, yv1_re);
+	yt0_im = _mm256_unpacklo_epi64(yv0_im, yv1_im);
+	yt1_re = _mm256_unpackhi_epi64(yv0_re, yv1_re);
+	yt1_im = _mm256_unpackhi_epi64(yv0_im, yv1_im);
+	yv0_re = _mm256_permute2x128_si256(yt0_re, yt1_re, 0x20);
+	yv0_im = _mm256_permute2x128_si256(yt0_im, yt1_im, 0x20);
+	yv1_re = _mm256_permute2x128_si256(yt0_re, yt1_re, 0x31);
+	yv1_im = _mm256_permute2x128_si256(yt0_im, yt1_im, 0x31);
+
+	*ya0_re = yv0_re;
+	*ya0_im = yv0_im;
+	*ya1_re = yv1_re;
+	*ya1_im = yv1_im;
+}
+#endif
 
 /* see kgen_inner.h */
 void
@@ -1120,7 +1270,201 @@ vect_FFT(unsigned logn, fxr *f)
 	}
 }
 
+#if FNDSA_AVX2
+/* see kgen_inner.h */
+TARGET_AVX2
+void
+avx2_vect_FFT(unsigned logn, fxr *f)
+{
+	size_t hn = (size_t)1 << (logn - 1);
+	size_t t = hn;
+	if (logn >= 4) {
+		for (unsigned lm = 1; lm < (logn - 2); lm ++) {
+			size_t m = (size_t)1 << lm;
+			size_t ht = t >> 1;
+			size_t j0 = 0;
+			size_t hm = m >> 1;
+			for (size_t i = 0; i < hm; i ++) {
+				fxc s = GM_TAB[m + i];
+				__m256i ys_re = _mm256_set1_epi64x(s.re.v);
+				__m256i ys_im = _mm256_set1_epi64x(s.im.v);
+				for (size_t j = j0; j < j0 + ht; j += 4) {
+					__m256i ya_re = _mm256_loadu_si256(
+						(__m256i *)(f + j));
+					__m256i ya_im = _mm256_loadu_si256(
+						(__m256i *)(f + j + hn));
+					__m256i yb_re = _mm256_loadu_si256(
+						(__m256i *)(f + j + ht));
+					__m256i yb_im = _mm256_loadu_si256(
+						(__m256i *)(f + j + ht + hn));
+					fxc_mul_x4(&yb_re, &yb_im,
+						yb_re, yb_im, ys_re, ys_im);
+					__m256i yc_re = _mm256_add_epi64(
+						ya_re, yb_re);
+					__m256i yc_im = _mm256_add_epi64(
+						ya_im, yb_im);
+					__m256i yd_re = _mm256_sub_epi64(
+						ya_re, yb_re);
+					__m256i yd_im = _mm256_sub_epi64(
+						ya_im, yb_im);
+					_mm256_storeu_si256(
+						(__m256i *)(f + j),
+						yc_re);
+					_mm256_storeu_si256(
+						(__m256i *)(f + j + hn),
+						yc_im);
+					_mm256_storeu_si256(
+						(__m256i *)(f + j + ht),
+						yd_re);
+					_mm256_storeu_si256(
+						(__m256i *)(f + j + ht + hn),
+						yd_im);
+				}
+				j0 += t;
+			}
+			t = ht;
+		}
 
+		size_t m = hn >> 1;
+		size_t hm = m >> 1;
+		for (size_t i = 0; i < hm; i += 2) {
+			__m256i ya0_re = _mm256_loadu_si256(
+				(const __m256i *)(f + (i << 2) + 0));
+			__m256i ya1_re = _mm256_loadu_si256(
+				(const __m256i *)(f + (i << 2) + 4));
+			__m256i ya0_im = _mm256_loadu_si256(
+				(const __m256i *)(f + hn + (i << 2) + 0));
+			__m256i ya1_im = _mm256_loadu_si256(
+				(const __m256i *)(f + hn + (i << 2) + 4));
+			fxp_FFT4(&ya0_re, &ya1_re, &ya0_im, &ya1_im, m + i);
+			_mm256_storeu_si256(
+				(__m256i *)(f + (i << 2) + 0), ya0_re);
+			_mm256_storeu_si256(
+				(__m256i *)(f + (i << 2) + 4), ya1_re);
+			_mm256_storeu_si256(
+				(__m256i *)(f + hn + (i << 2) + 0), ya0_im);
+			_mm256_storeu_si256(
+				(__m256i *)(f + hn + (i << 2) + 4), ya1_im);
+		}
+		return;
+	}
+	for (unsigned lm = 1; lm < logn; lm ++) {
+		size_t m = (size_t)1 << lm;
+		size_t ht = t >> 1;
+		size_t j0 = 0;
+		size_t hm = m >> 1;
+		for (size_t i = 0; i < hm; i ++) {
+			fxc s = GM_TAB[m + i];
+			for (size_t j = j0; j < j0 + ht; j ++) {
+				fxc x, y;
+				x.re = f[j];
+				x.im = f[j + hn];
+				y.re = f[j + ht];
+				y.im = f[j + ht + hn];
+				y = fxc_mul(s, y);
+				fxc z1 = fxc_add(x, y);
+				f[j] = z1.re;
+				f[j + hn] = z1.im;
+				fxc z2 = fxc_sub(x, y);
+				f[j + ht] = z2.re;
+				f[j + ht + hn] = z2.im;
+			}
+			j0 += t;
+		}
+		t = ht;
+	}
+}
+#endif
+
+#if FNDSA_AVX2
+TARGET_AVX2
+static inline void
+fxp_iFFT4(__m256i *ya0_re, __m256i *ya1_re, __m256i *ya0_im, __m256i *ya1_im,
+	size_t k)
+{
+	__m256i yv0_re = *ya0_re;
+	__m256i yv1_re = *ya1_re;
+	__m256i yv0_im = *ya0_im;
+	__m256i yv1_im = *ya1_im;
+	__m256i yt0_re, yt0_im, yt1_re, yt1_im;
+
+	/*
+	 * v0: 0:1:2:3
+	 * v1: 4:5:6:7
+	 * combine 0/1 with gm[2*k+0], 2/3 with gm[2*k+1]
+	 * combine 4/5 with gm[2*k+2], 6/7 with gm[2*k+3]
+	 */
+
+	/* yt0 <- 0:4:2:6
+	   yt1 <- 1:5:3:7 */
+	yt0_re = _mm256_unpacklo_epi64(yv0_re, yv1_re);
+	yt0_im = _mm256_unpacklo_epi64(yv0_im, yv1_im);
+	yt1_re = _mm256_unpackhi_epi64(yv0_re, yv1_re);
+	yt1_im = _mm256_unpackhi_epi64(yv0_im, yv1_im);
+
+	/* yg1 <- gm4:gm6:gm5:gm7 */
+	__m256i yg1_re = _mm256_setr_epi64x(
+		GM_TAB[(k << 1) + 0].re.v,
+		GM_TAB[(k << 1) + 2].re.v,
+		GM_TAB[(k << 1) + 1].re.v,
+		GM_TAB[(k << 1) + 3].re.v);
+	__m256i yg1_im = _mm256_setr_epi64x(
+		GM_TAB[(k << 1) + 0].im.v,
+		GM_TAB[(k << 1) + 2].im.v,
+		GM_TAB[(k << 1) + 1].im.v,
+		GM_TAB[(k << 1) + 3].im.v);
+	yg1_im = _mm256_sub_epi64(_mm256_setzero_si256(), yg1_im);
+
+	yv0_re = fxr_half_x4(_mm256_add_epi64(yt0_re, yt1_re));
+	yv0_im = fxr_half_x4(_mm256_add_epi64(yt0_im, yt1_im));
+	yv1_re = fxr_half_x4(_mm256_sub_epi64(yt0_re, yt1_re));
+	yv1_im = fxr_half_x4(_mm256_sub_epi64(yt0_im, yt1_im));
+	fxc_mul_x4(&yv1_re, &yv1_im, yv1_re, yv1_im, yg1_re, yg1_im);
+
+	/*
+	 * v0: 0:4:2:6
+	 * v1: 1:5:3:7
+	 * combine 0/2 and 1/3 with gm[k+0]
+	 * combine 4/6 and 5/7 with gm[k+1]
+	 */
+
+	/* yt0 <- 0:4:1:5
+	   yt1 <- 2:6:3:7 */
+	yt0_re = _mm256_permute2x128_si256(yv0_re, yv1_re, 0x20);
+	yt0_im = _mm256_permute2x128_si256(yv0_im, yv1_im, 0x20);
+	yt1_re = _mm256_permute2x128_si256(yv0_re, yv1_re, 0x31);
+	yt1_im = _mm256_permute2x128_si256(yv0_im, yv1_im, 0x31);
+
+	/* yg0 <- gm0:gm1:gm0:gm1 */
+	__m256i yg0 = _mm256_loadu_si256((const __m256i *)(GM_TAB + k));
+	__m256i yg0_re = _mm256_permute4x64_epi64(yg0, 0x88);
+	__m256i yg0_im = _mm256_permute4x64_epi64(yg0, 0xDD);
+	yg0_im = _mm256_sub_epi64(_mm256_setzero_si256(), yg0_im);
+
+	yv0_re = fxr_half_x4(_mm256_add_epi64(yt0_re, yt1_re));
+	yv0_im = fxr_half_x4(_mm256_add_epi64(yt0_im, yt1_im));
+	yv1_re = fxr_half_x4(_mm256_sub_epi64(yt0_re, yt1_re));
+	yv1_im = fxr_half_x4(_mm256_sub_epi64(yt0_im, yt1_im));
+	fxc_mul_x4(&yv1_re, &yv1_im, yv1_re, yv1_im, yg0_re, yg0_im);
+
+	/*
+	 * Reorder into 0:1:2:3 and 4:5:6:7
+	 */
+	yt0_re = _mm256_unpacklo_epi64(yv0_re, yv1_re);
+	yt0_im = _mm256_unpacklo_epi64(yv0_im, yv1_im);
+	yt1_re = _mm256_unpackhi_epi64(yv0_re, yv1_re);
+	yt1_im = _mm256_unpackhi_epi64(yv0_im, yv1_im);
+	yv0_re = _mm256_permute4x64_epi64(yt0_re, 0xD8);
+	yv0_im = _mm256_permute4x64_epi64(yt0_im, 0xD8);
+	yv1_re = _mm256_permute4x64_epi64(yt1_re, 0xD8);
+	yv1_im = _mm256_permute4x64_epi64(yt1_im, 0xD8);
+
+	*ya0_re = yv0_re;
+	*ya0_im = yv0_im;
+	*ya1_re = yv1_re;
+	*ya1_im = yv1_im;
+}
+#endif
 
 /* see kgen_inner.h */
 void
@@ -1154,6 +1498,111 @@ vect_iFFT(unsigned logn, fxr *f)
 	}
 }
 
+#if FNDSA_AVX2
+/* see kgen_inner.h */
+TARGET_AVX2
+void
+avx2_vect_iFFT(unsigned logn, fxr *f)
+{
+	size_t hn = (size_t)1 << (logn - 1);
+	size_t ht = 1;
+	if (logn >= 4) {
+		size_t m1 = hn >> 1;
+		size_t hm1 = m1 >> 1;
+		for (size_t i = 0; i < hm1; i += 2) {
+			__m256i ya0_re = _mm256_loadu_si256(
+				(const __m256i *)(f + (i << 2) + 0));
+			__m256i ya1_re = _mm256_loadu_si256(
+				(const __m256i *)(f + (i << 2) + 4));
+			__m256i ya0_im = _mm256_loadu_si256(
+				(const __m256i *)(f + hn + (i << 2) + 0));
+			__m256i ya1_im = _mm256_loadu_si256(
+				(const __m256i *)(f + hn + (i << 2) + 4));
+			fxp_iFFT4(&ya0_re, &ya1_re, &ya0_im, &ya1_im, m1 + i);
+			_mm256_storeu_si256(
+				(__m256i *)(f + (i << 2) + 0), ya0_re);
+			_mm256_storeu_si256(
+				(__m256i *)(f + (i << 2) + 4), ya1_re);
+			_mm256_storeu_si256(
+				(__m256i *)(f + hn + (i << 2) + 0), ya0_im);
+			_mm256_storeu_si256(
+				(__m256i *)(f + hn + (i << 2) + 4), ya1_im);
+		}
+		ht = 4;
+
+		for (unsigned lm = logn - 3; lm > 0; lm --) {
+			size_t m = (size_t)1 << lm;
+			size_t t = ht << 1;
+			size_t j0 = 0;
+			size_t hm = m >> 1;
+			for (size_t i = 0; i < hm; i ++) {
+				fxc s = GM_TAB[m + i];
+				__m256i ys_re = _mm256_set1_epi64x(s.re.v);
+				__m256i ys_im = _mm256_set1_epi64x(-s.im.v);
+				for (size_t j = j0; j < j0 + ht; j += 4) {
+					__m256i ya_re = _mm256_loadu_si256(
+						(__m256i *)(f + j));
+					__m256i ya_im = _mm256_loadu_si256(
+						(__m256i *)(f + j + hn));
+					__m256i yb_re = _mm256_loadu_si256(
+						(__m256i *)(f + j + ht));
+					__m256i yb_im = _mm256_loadu_si256(
+						(__m256i *)(f + j + ht + hn));
+					__m256i yc_re = fxr_half_x4(
+						_mm256_add_epi64(ya_re, yb_re));
+					__m256i yc_im = fxr_half_x4(
+						_mm256_add_epi64(ya_im, yb_im));
+					__m256i yd_re = fxr_half_x4(
+						_mm256_sub_epi64(ya_re, yb_re));
+					__m256i yd_im = fxr_half_x4(
+						_mm256_sub_epi64(ya_im, yb_im));
+					fxc_mul_x4(&yd_re, &yd_im,
+						yd_re, yd_im, ys_re, ys_im);
+					_mm256_storeu_si256(
+						(__m256i *)(f + j),
+						yc_re);
+					_mm256_storeu_si256(
+						(__m256i *)(f + j + hn),
+						yc_im);
+					_mm256_storeu_si256(
+						(__m256i *)(f + j + ht),
+						yd_re);
+					_mm256_storeu_si256(
+						(__m256i *)(f + j + ht + hn),
+						yd_im);
+				}
+				j0 += t;
+			}
+			ht = t;
+		}
+		return;
+	}
+	for (unsigned lm = logn - 1; lm > 0; lm --) {
+		size_t m = (size_t)1 << lm;
+		size_t t = ht << 1;
+		size_t j0 = 0;
+		size_t hm = m >> 1;
+		for (size_t i = 0; i < hm; i ++) {
+			fxc s = fxc_conj(GM_TAB[m + i]);
+			for (size_t j = j0; j < j0 + ht; j ++) {
+				fxc x, y;
+				x.re = f[j];
+				x.im = f[j + hn];
+				y.re = f[j + ht];
+				y.im = f[j + ht + hn];
+				fxc z1 = fxc_half(fxc_add(x, y));
+				f[j] = z1.re;
+				f[j + hn] = z1.im;
+				fxc z2 = fxc_mul(s, fxc_half(fxc_sub(x, y)));
+				f[j + ht] = z2.re;
+				f[j + ht + hn] = z2.im;
+			}
+			j0 += t;
+		}
+		ht = t;
+	}
+}
+#endif
 
 /* see kgen_inner.h */
 void
@@ -1165,6 +1614,39 @@ vect_set(unsigned logn, fxr *d, const int8_t *f)
 	}
 }
 
+#if FNDSA_AVX2
+/* see kgen_inner.h */
+TARGET_AVX2
+void
+avx2_vect_set(unsigned logn, fxr *d, const int8_t *f)
+{
+	size_t n = (size_t)1 << logn;
+	if (logn >= 4) {
+		for (size_t i = 0; i < n; i += 16) {
+			__m128i xf = _mm_loadu_si128((__m128i *)(f + i));
+			__m256i ya0 = _mm256_cvtepi8_epi64(xf);
+			__m256i ya1 = _mm256_cvtepi8_epi64(
+				_mm_bsrli_si128(xf, 4));
+			__m256i ya2 = _mm256_cvtepi8_epi64(
+				_mm_bsrli_si128(xf, 8));
+			__m256i ya3 = _mm256_cvtepi8_epi64(
+				_mm_bsrli_si128(xf, 12));
+			_mm256_storeu_si256((__m256i *)(d + i + 0),
+				_mm256_slli_epi64(ya0, 32));
+			_mm256_storeu_si256((__m256i *)(d + i + 4),
+				_mm256_slli_epi64(ya1, 32));
+			_mm256_storeu_si256((__m256i *)(d + i + 8),
+				_mm256_slli_epi64(ya2, 32));
+			_mm256_storeu_si256((__m256i *)(d + i + 12),
+				_mm256_slli_epi64(ya3, 32));
+		}
+		return;
+	}
+	for (size_t i = 0; i < n; i ++) {
+		d[i] = fxr_of(f[i]);
+	}
+}
+#endif
 
 /* see kgen_inner.h */
 void
@@ -1176,6 +1658,27 @@ vect_add(unsigned logn, fxr *restrict a, const fxr *restrict b)
 	}
 }
 
+#if FNDSA_AVX2
+/* see kgen_inner.h */
+TARGET_AVX2
+void
+avx2_vect_add(unsigned logn, fxr *restrict a, const fxr *restrict b)
+{
+	size_t n = (size_t)1 << logn;
+	if (logn >= 2) {
+		for (size_t i = 0; i < n; i += 4) {
+			__m256i ya = _mm256_loadu_si256((__m256i *)(a + i));
+			__m256i yb = _mm256_loadu_si256((__m256i *)(b + i));
+			__m256i yd = _mm256_add_epi64(ya, yb);
+			_mm256_storeu_si256((__m256i *)(a + i), yd);
+		}
+		return;
+	}
+	for (size_t i = 0; i < n; i ++) {
+		a[i] = fxr_add(a[i], b[i]);
+	}
+}
+#endif
 
 /* see kgen_inner.h */
 void
@@ -1187,6 +1690,27 @@ vect_mul_realconst(unsigned logn, fxr *a, fxr c)
 	}
 }
 
+#if FNDSA_AVX2
+/* see kgen_inner.h */
+TARGET_AVX2
+void
+avx2_vect_mul_realconst(unsigned logn, fxr *a, fxr c)
+{
+	size_t n = (size_t)1 << logn;
+	if (logn >= 2) {
+		__m256i yc = _mm256_set1_epi64x(c.v);
+		for (size_t i = 0; i < n; i += 4) {
+			__m256i ya = _mm256_loadu_si256((__m256i *)(a + i));
+			__m256i yd = fxr_mul_x4(ya, yc);
+			_mm256_storeu_si256((__m256i *)(a + i), yd);
+		}
+		return;
+	}
+	for (size_t i = 0; i < n; i ++) {
+		a[i] = fxr_mul(a[i], c);
+	}
+}
+#endif
 
 /* see kgen_inner.h */
 void
@@ -1198,6 +1722,27 @@ vect_mul2e(unsigned logn, fxr *a, unsigned e)
 	}
 }
 
+#if FNDSA_AVX2
+/* see kgen_inner.h */
+TARGET_AVX2
+void
+avx2_vect_mul2e(unsigned logn, fxr *a, unsigned e)
+{
+	size_t n = (size_t)1 << logn;
+	if (logn >= 2) {
+		__m256i ye = _mm256_set1_epi64x(e);
+		for (size_t i = 0; i < n; i += 4) {
+			__m256i ya = _mm256_loadu_si256((__m256i *)(a + i));
+			ya = _mm256_sllv_epi64(ya, ye);
+			_mm256_storeu_si256((__m256i *)(a + i), ya);
+		}
+		return;
+	}
+	for (size_t i = 0; i < n; i ++) {
+		a[i] = fxr_mul2e(a[i], e);
+	}
+}
+#endif
 
 /* see kgen_inner.h */
 void
@@ -1216,6 +1761,42 @@ vect_mul_fft(unsigned logn, fxr *restrict a, const fxr *restrict b)
 	}
 }
 
+#if FNDSA_AVX2
+/* see kgen_inner.h */
+TARGET_AVX2
+void
+avx2_vect_mul_fft(unsigned logn, fxr *restrict a, const fxr *restrict b)
+{
+	size_t hn = (size_t)1 << (logn - 1);
+	if (logn >= 3) {
+		for (size_t i = 0; i < hn; i += 4) {
+			__m256i ya_re = _mm256_loadu_si256(
+				(const __m256i *)(a + i));
+			__m256i ya_im = _mm256_loadu_si256(
+				(const __m256i *)(a + i + hn));
+			__m256i yb_re = _mm256_loadu_si256(
+				(const __m256i *)(b + i));
+			__m256i yb_im = _mm256_loadu_si256(
+				(const __m256i *)(b + i + hn));
+			__m256i yd_re, yd_im;
+			fxc_mul_x4(&yd_re, &yd_im, ya_re, ya_im, yb_re, yb_im);
+			_mm256_storeu_si256((__m256i *)(a + i), yd_re);
+			_mm256_storeu_si256((__m256i *)(a + i + hn), yd_im);
+		}
+		return;
+	}
+	for (size_t i = 0; i < hn; i ++) {
+		fxc x, y;
+		x.re = a[i];
+		x.im = a[i + hn];
+		y.re = b[i];
+		y.im = b[i + hn];
+		fxc z = fxc_mul(x, y);
+		a[i] = z.re;
+		a[i + hn] = z.im;
+	}
+}
+#endif
 
 /* see kgen_inner.h */
 void
@@ -1228,6 +1809,27 @@ vect_adj_fft(unsigned logn, fxr *a)
 	}
 }
 
+#if FNDSA_AVX2
+/* see kgen_inner.h */
+TARGET_AVX2
+void
+avx2_vect_adj_fft(unsigned logn, fxr *a)
+{
+	size_t hn = (size_t)1 << (logn - 1);
+	size_t n = (size_t)1 << logn;
+	if (logn >= 3) {
+		for (size_t i = hn; i < n; i += 4) {
+			__m256i y = _mm256_loadu_si256((__m256i *)(a + i));
+			y = _mm256_sub_epi64(_mm256_setzero_si256(), y);
+			_mm256_storeu_si256((__m256i *)(a + i), y);
+		}
+		return;
+	}
+	for (size_t i = hn; i < n; i ++) {
+		a[i] = fxr_neg(a[i]);
+	}
+}
+#endif
 
 /* see kgen_inner.h */
 void
@@ -1240,6 +1842,34 @@ vect_mul_selfadj_fft(unsigned logn, fxr *restrict a, const fxr *restrict b)
 	}
 }
 
+#if FNDSA_AVX2
+/* see kgen_inner.h */
+TARGET_AVX2
+void
+avx2_vect_mul_selfadj_fft(unsigned logn, fxr *restrict a, const fxr *restrict b)
+{
+	size_t hn = (size_t)1 << (logn - 1);
+	if (logn >= 3) {
+		for (size_t i = 0; i < hn; i += 4) {
+			__m256i ya_re = _mm256_loadu_si256(
+				(__m256i *)(a + i));
+			__m256i ya_im = _mm256_loadu_si256(
+				(__m256i *)(a + i + hn));
+			__m256i yb = _mm256_loadu_si256(
+				(__m256i *)(b + i));
+			_mm256_storeu_si256((__m256i *)(a + i),
+				fxr_mul_x4(ya_re, yb));
+			_mm256_storeu_si256((__m256i *)(a + i + hn),
+				fxr_mul_x4(ya_im, yb));
+		}
+		return;
+	}
+	for (size_t i = 0; i < hn; i ++) {
+		a[i] = fxr_mul(a[i], b[i]);
+		a[i + hn] = fxr_mul(a[i + hn], b[i]);
+	}
+}
+#endif
 
 /* see kgen_inner.h */
 void
@@ -1252,6 +1882,34 @@ vect_div_selfadj_fft(unsigned logn, fxr *restrict a, const fxr *restrict b)
 	}
 }
 
+#if FNDSA_AVX2
+/* see kgen_inner.h */
+TARGET_AVX2
+void
+avx2_vect_div_selfadj_fft(unsigned logn, fxr *restrict a, const fxr *restrict b)
+{
+	size_t hn = (size_t)1 << (logn - 1);
+	if (logn >= 3) {
+		for (size_t i = 0; i < hn; i += 4) {
+			__m256i ya_re = _mm256_loadu_si256(
+				(const __m256i *)(a + i));
+			__m256i ya_im = _mm256_loadu_si256(
+				(const __m256i *)(a + i + hn));
+			__m256i yb = _mm256_loadu_si256(
+				(const __m256i *)(b + i));
+			ya_re = avx2_fxr_div_x4(ya_re, yb);
+			ya_im = avx2_fxr_div_x4(ya_im, yb);
+			_mm256_storeu_si256((__m256i *)(a + i), ya_re);
+			_mm256_storeu_si256((__m256i *)(a + i + hn), ya_im);
+		}
+		return;
+	}
+	for (size_t i = 0; i < hn; i ++) {
+		a[i] = fxr_div(a[i], b[i]);
+		a[i + hn] = fxr_div(a[i + hn], b[i]);
+	}
+}
+#endif
 
 /* see kgen_inner.h */
 void
@@ -1266,6 +1924,41 @@ vect_norm_fft(unsigned logn, fxr *restrict d,
 	}
 }
 
+#if FNDSA_AVX2
+/* see kgen_inner.h */
+TARGET_AVX2
+void
+avx2_vect_norm_fft(unsigned logn, fxr *restrict d,
+	const fxr *restrict a, const fxr *restrict b)
+{
+	size_t hn = (size_t)1 << (logn - 1);
+	if (logn >= 3) {
+		for (size_t i = 0; i < hn; i += 4) {
+			__m256i ya_re = _mm256_loadu_si256(
+				(const __m256i *)(a + i));
+			__m256i ya_im = _mm256_loadu_si256(
+				(const __m256i *)(a + i + hn));
+			__m256i yb_re = _mm256_loadu_si256(
+				(const __m256i *)(b + i));
+			__m256i yb_im = _mm256_loadu_si256(
+				(const __m256i *)(b + i + hn));
+			__m256i y0 = fxr_sqr_x4(ya_re);
+			__m256i y1 = fxr_sqr_x4(ya_im);
+			__m256i y2 = fxr_sqr_x4(yb_re);
+			__m256i y3 = fxr_sqr_x4(yb_im);
+			__m256i yd = _mm256_add_epi64(
+				_mm256_add_epi64(y0, y1),
+				_mm256_add_epi64(y2, y3));
+			_mm256_storeu_si256((__m256i *)(d + i), yd);
+		}
+	}
+	for (size_t i = 0; i < hn; i ++) {
+		d[i] = fxr_add(
+			fxr_add(fxr_sqr(a[i]), fxr_sqr(a[i + hn])),
+			fxr_add(fxr_sqr(b[i]), fxr_sqr(b[i + hn])));
+	}
+}
+#endif
 
 /* see kgen_inner.h */
 void
@@ -1282,3 +1975,43 @@ vect_invnorm_fft(unsigned logn, fxr *restrict d,
 	}
 }
 
+#if FNDSA_AVX2
+/* see kgen_inner.h */
+TARGET_AVX2
+void
+avx2_vect_invnorm_fft(unsigned logn, fxr *restrict d,
+	const fxr *restrict a, const fxr *restrict b, unsigned e)
+{
+	size_t hn = (size_t)1 << (logn - 1);
+	fxr fe = fxr_of((int32_t)1 << e);
+	if (logn >= 3) {
+		__m256i yfe = _mm256_set1_epi64x(fe.v);
+		for (size_t i = 0; i < hn; i += 4) {
+			__m256i ya_re = _mm256_loadu_si256(
+				(const __m256i *)(a + i));
+			__m256i ya_im = _mm256_loadu_si256(
+				(const __m256i *)(a + i + hn));
+			__m256i yb_re = _mm256_loadu_si256(
+				(const __m256i *)(b + i));
+			__m256i yb_im = _mm256_loadu_si256(
+				(const __m256i *)(b + i + hn));
+			__m256i y0 = fxr_sqr_x4(ya_re);
+			__m256i y1 = fxr_sqr_x4(ya_im);
+			__m256i y2 = fxr_sqr_x4(yb_re);
+			__m256i y3 = fxr_sqr_x4(yb_im);
+			__m256i yz = _mm256_add_epi64(
+				_mm256_add_epi64(y0, y1),
+				_mm256_add_epi64(y2, y3));
+			__m256i yd = avx2_fxr_div_x4(yfe, yz);
+			_mm256_storeu_si256((__m256i *)(d + i), yd);
+		}
+		return;
+	}
+	for (size_t i = 0; i < hn; i ++) {
+		fxr z = fxr_add(
+			fxr_add(fxr_sqr(a[i]), fxr_sqr(a[i + hn])),
+			fxr_add(fxr_sqr(b[i]), fxr_sqr(b[i + hn])));
+		d[i] = fxr_div(fe, z);
+	}
+}
+#endif
