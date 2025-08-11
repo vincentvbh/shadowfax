@@ -123,7 +123,6 @@ sign_core(unsigned logn,
 			   are 58*4 = 232 bytes free in tmp[] at this point,
 			   and we need only 208. */
 			shake_context sc;
-			// shake_context *sc = (shake_context *)tmp;
 			shake_init(&sc, 256);
 			shake_inject(&sc, seed, seed_len);
 			uint8_t cbuf[4];
@@ -138,7 +137,6 @@ sign_core(unsigned logn,
 
 		/* Hash the message into a polynomial. */
 		uint16_t hm[n];
-		// uint16_t *hm = (uint16_t *)((uint8_t *)tmp + 56 * n);
 		hash_to_point(logn, nonce, hashed_vk,
 			ctx, ctx_len, id, hv, hv_len, hm);
 
@@ -162,19 +160,19 @@ sign_core(unsigned logn,
 		      g11 (n)
 		      b11 (n)
 		      b01 (n)  */
-		int8_t *f = (int8_t *)tmp;
-		int8_t *g = f + n;
+		int8_t f[n];
+		int8_t g[n];
 		(void)trim_i8_decode(logn, sign_key_fgF, f, nbits);
 		(void)trim_i8_decode(logn, sign_key_fgF + flen, g, nbits);
-		fpr *t0 = (fpr *)tmp;
-		fpr *t1 = t0 + n;
-		fpr *b00 = t1 + n;
-		fpr *b01 = b00 + n;
-		fpr *b10 = b01 + n;
-		fpr *b11 = b10 + n;
+		fpr t0[n];
+		fpr t1[n];
+		fpr b00[n];
+		fpr b01[n];
+		fpr b10[n];
+		fpr b11[n];
 		basis_to_FFT(logn, b00, b01, b10, b11, f, g, F, G);
-		fpr *t2 = b11 + n;
-		memcpy(t2, b01, n * sizeof(fpr));
+		fpr b01_cache[n];
+		memcpy(b01_cache, b01, n * sizeof(fpr));
 		fpoly_gram_fft(logn, b00, b01, b10, b11);
 
 		/* We now move things a bit to get the following (taking
@@ -187,9 +185,9 @@ sign_core(unsigned logn,
 		      free space (n)
 		      b11 (n)
 		      b01 (n)  */
-		fpr *g01 = b00;
-		fpr *g00 = b01;
-		fpr *g11 = b01 + hn;
+		fpr g01[n];
+		fpr g00[hn];
+		fpr g11[hn];
 		memcpy(t1, b00, hn * sizeof(fpr));
 		memcpy(g01, b01, n * sizeof(fpr));
 		memcpy(g00, t1, hn * sizeof(fpr));
@@ -198,8 +196,8 @@ sign_core(unsigned logn,
 		/* We now set the target [t0,t1] to [hm,0], then apply the
 		   lattice basis to obtain the real target vector (after
 		   normalization with regard to the modulus q).
-		   b11 is unchanged, but b01 is in t2. */
-		fpoly_apply_basis(logn, t0, t1, t2, b11, hm);
+		   b11 is unchanged, but b01 is in b01_cache. */
+		fpoly_apply_basis(logn, t0, t1, b01_cache, b11, hm);
 
 		/* Current layout:
 		      t0  (n)
@@ -210,7 +208,15 @@ sign_core(unsigned logn,
 		   We now do the Fast Fourier sampling, which uses
 		   up to 3*n slots beyond t1 (hence 7*n total usage
 		   in tmp[]). */
+		fpr *tmp_fpr = (fpr*)tmp;
+		memcpy(tmp_fpr, t0, n * sizeof(fpr));
+		memcpy(tmp_fpr + n, t1, n * sizeof(fpr));
+		memcpy(tmp_fpr + 2 * n, g01, n * sizeof(fpr));
+		memcpy(tmp_fpr + 3 * n, g00, hn * sizeof(fpr));
+		memcpy(tmp_fpr + 3 * n + hn, g11, hn * sizeof(fpr));
 		ffsamp_fft(&ss, tmp);
+		memcpy(t0, tmp_fpr, n * sizeof(fpr));
+		memcpy(t1, tmp_fpr + n, n * sizeof(fpr));
 
 		/*
 		 * At this point, [t0,t1] are the FFT representation of
@@ -237,10 +243,8 @@ sign_core(unsigned logn,
 		   hence:
 		      v0 = t0*g + t1*G
 		      v1 = -t0*f - t1*F  */
-		fpr *w0 = t1 + n;
-		fpr *w1 = w0 + n;
-		f = (int8_t *)(w1 + n);
-		g = f + n;
+		fpr w0[n];
+		fpr w1[n];
 		(void)trim_i8_decode(logn, sign_key_fgF, f, nbits);
 		(void)trim_i8_decode(logn, sign_key_fgF + flen, g, nbits);
 		fpoly_set_small(logn, w0, g);
