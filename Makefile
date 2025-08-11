@@ -9,9 +9,14 @@ RAND_PATH   = randombytes
 HASH_PATH   = hash
 SYMM_PATH   = symmetric
 NGEN_PATH   = ntru_gen
-KEM_PATH    = BAT
+BAT_PATH    = BAT
+MLKEM_PATH  = mlkem
 RSIG_PATH   = Gandalf
 DH_PATH     = dh
+
+KEM_PATH    = mlkem
+# KEM_PATH    = BAT
+
 
 CFLAGS     += -I$(RAND_PATH) -I$(HASH_PATH) -I$(SYMM_PATH) -I$(NGEN_PATH) -I$(KEM_PATH) -I$(RSIG_PATH) -I$(DH_PATH)
 
