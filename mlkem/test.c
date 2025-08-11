@@ -16,18 +16,15 @@ int main(void) {
     uint8_t key_a[CRYPTO_BYTES];
     uint8_t key_b[CRYPTO_BYTES];
 
-    // 32 <= slen <= 64
-    const size_t slen = 64;
-
     int correct;
 
     correct = 0;
     for(int i = 0; i < ITERATIONS; i++){
 
         crypto_kem_keypair(pk, sk);
-        crypto_kem_enc(ct, key_b, slen, pk);
-        crypto_kem_dec(key_a, slen, ct, sk);
-        correct += (memcmp(key_a, key_b, slen) == 0);
+        crypto_kem_enc(ct, key_b, 32, pk);
+        crypto_kem_dec(key_a, 32, ct, sk);
+        correct += (memcmp(key_a, key_b, CRYPTO_BYTES) == 0);
 
     }
     printf("%d/%d compatible shared secret pairs. (%s).\n\n", correct, ITERATIONS,
@@ -37,10 +34,10 @@ int main(void) {
     for(int i = 0; i < ITERATIONS; i++){
 
         crypto_kem_keypair(pk, sk);
-        crypto_kem_enc(ct, key_b, slen, pk);
+        crypto_kem_enc(ct, key_b, 32, pk);
         randombytes(sk, CRYPTO_SECRETKEYBYTES);
-        crypto_kem_dec(key_a, slen, ct, sk);
-        correct += (memcmp(key_a, key_b, slen) == 0);
+        crypto_kem_dec(key_a, 32, ct, sk);
+        correct += (memcmp(key_a, key_b, CRYPTO_BYTES) == 0);
 
     }
     printf("%d/%d compatible shared secret pairs (invalid secret key). (%s).\n\n", correct, ITERATIONS,
@@ -50,10 +47,10 @@ int main(void) {
     for(int i = 0; i < ITERATIONS; i++){
 
         crypto_kem_keypair(pk, sk);
-        crypto_kem_enc(ct, key_b, slen, pk);
+        crypto_kem_enc(ct, key_b, 32, pk);
         ct[rand() % CRYPTO_CIPHERTEXTBYTES] ^= 0xff;
-        crypto_kem_dec(key_a, slen, ct, sk);
-        correct += (memcmp(key_a, key_b, slen) == 0);
+        crypto_kem_dec(key_a, 32, ct, sk);
+        correct += (memcmp(key_a, key_b, CRYPTO_BYTES) == 0);
 
     }
     printf("%d/%d compatible shared secret pairs (ciphertext with a randomly toggled byte). (%s).\n\n", correct, ITERATIONS,
