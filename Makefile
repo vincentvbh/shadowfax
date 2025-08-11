@@ -9,13 +9,18 @@ RAND_PATH   = randombytes
 HASH_PATH   = hash
 SYMM_PATH   = symmetric
 NGEN_PATH   = ntru_gen
-BAT_PATH    = BAT
-MLKEM_PATH  = mlkem
-RSIG_PATH   = Gandalf
+
 DH_PATH     = dh
 
-KEM_PATH    = mlkem
-# KEM_PATH    = BAT
+RSIG_F_PATH = Gandalf_Falcon
+RSIG_M_PATH = Gandalf_Mitaka
+
+RSIG_PATH   = $(RSIG_M_PATH)
+
+BAT_PATH    = BAT
+MLKEM_PATH  = mlkem
+KEM_PATH    = $(MLKEM_PATH)
+# KEM_PATH    = $(BAT_PATH)
 
 
 CFLAGS     += -I$(RAND_PATH) -I$(HASH_PATH) -I$(SYMM_PATH) -I$(NGEN_PATH) -I$(KEM_PATH) -I$(RSIG_PATH) -I$(DH_PATH)
@@ -39,7 +44,7 @@ KEM_HEADER  = $(wildcard $(KEM_PATH)/*.h)
 KEM_SOURCE  = $(filter-out $(KEM_PATH)/modgen.c $(KEM_PATH)/modgen257.c $(KEM_PATH)/modgen769.c $(KEM_PATH)/modgen64513.c $(KEM_PATH)/test.c, $(wildcard $(KEM_PATH)/*.c))
 
 RSIG_HEADER = $(wildcard $(RSIG_PATH)/*.h)
-RSIG_SOURCE = $(filter-out $(RSIG_PATH)/test.c, $(wildcard $(RSIG_PATH)/*.c))
+RSIG_SOURCE = $(filter-out $(RSIG_PATH)/samplerZ_table.c $(RSIG_PATH)/test.c, $(wildcard $(RSIG_PATH)/*.c))
 
 DH_HEADER   = $(wildcard $(DH_PATH)/*.h)
 DH_SOURCE   = $(filter-out $(DH_PATH)/test.c, $(wildcard $(DH_PATH)/*.c))

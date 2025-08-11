@@ -12,7 +12,7 @@ HEADERS    += $(wildcard $(RAND_PATH)/*.h)
 HEADERS    += $(wildcard $(HASH_PATH)/*.h)
 HEADERS    += $(wildcard $(NGEN_PATH)/*.h)
 
-SOURCES     = $(filter-out test.c, $(wildcard *.c))
+SOURCES     = $(filter-out samplerZ_table.c test.c, $(wildcard *.c))
 SOURCES    += $(wildcard $(RAND_PATH)/*.c)
 SOURCES    += $(wildcard $(HASH_PATH)/*.c)
 SOURCES    += $(wildcard $(NGEN_PATH)/*.c)
