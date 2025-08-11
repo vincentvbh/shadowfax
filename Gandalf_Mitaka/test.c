@@ -1,7 +1,6 @@
 
 #include "rsig_api.h"
-#include "sign_keygen.h"
-#include "compute_keys.h"
+#include "mitaka_keygen.h"
 #include "mitaka_sign.h"
 #include "randombytes.h"
 

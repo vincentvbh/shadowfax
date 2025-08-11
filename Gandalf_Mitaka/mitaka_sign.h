@@ -2,7 +2,6 @@
 #define MITAKA_SIGN_H
 
 #include "rsig_params.h"
-#include "expanded_keys.h"
 
 #include <stddef.h>
 

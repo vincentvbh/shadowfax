@@ -1,8 +1,6 @@
 #ifndef MITAKA_SAMPLER_H
 #define MITAKA_SAMPLER_H
 
-#include "expanded_keys.h"
-
 #define TABLE_SIZE 13
 
 extern

@@ -1,7 +1,5 @@
 
-#include "compute_keys.h"
 #include "rsig.h"
-#include "expanded_keys.h"
 #include "mitaka_sampler.h"
 #include "gandalf_samplerZ.h"
 #include "hash.h"
