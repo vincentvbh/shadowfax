@@ -88,7 +88,7 @@ int crypto_kem_enc_derand(uint8_t *ct,
   hash_h(buf + KYBER_SYMBYTES, pk, KYBER_PUBLICKEYBYTES);
   hash_g(kr, slen + KYBER_SYMBYTES, buf, 3 * KYBER_SYMBYTES);
 
-  /* coins are in kr + slen */
+  /* coins are in kr+KYBER_SYMBYTES */
   indcpa_enc(ct, buf, pk, kr + slen);
 
   memcpy(ss, kr, slen);
@@ -114,8 +114,8 @@ int crypto_kem_enc(uint8_t *ct,
                    uint8_t *ss, size_t slen,
                    const uint8_t *pk)
 {
-  uint8_t coins[2 * KYBER_SYMBYTES];
-  randombytes(coins, 2 * KYBER_SYMBYTES);
+  uint8_t coins[KYBER_SYMBYTES];
+  randombytes(coins, KYBER_SYMBYTES);
   crypto_kem_enc_derand(ct, ss, slen, pk, coins);
   return 0;
 }
@@ -147,21 +147,21 @@ int crypto_kem_dec(uint8_t *ss, size_t slen,
   uint8_t kr[slen + KYBER_SYMBYTES];
 //  uint8_t cmp[KYBER_CIPHERTEXTBYTES+KYBER_SYMBYTES];
   uint8_t cmp[KYBER_CIPHERTEXTBYTES];
-  const uint8_t *pk = sk + KYBER_INDCPA_SECRETKEYBYTES;
+  const uint8_t *pk = sk+KYBER_INDCPA_SECRETKEYBYTES;
 
   indcpa_dec(buf, ct, sk);
 
   /* Multitarget countermeasure for coins + contributory KEM */
-  memcpy(buf + KYBER_SYMBYTES, sk + KYBER_SECRETKEYBYTES - 3 * KYBER_SYMBYTES, 2 * KYBER_SYMBYTES);
+  memcpy(buf+KYBER_SYMBYTES, sk+KYBER_SECRETKEYBYTES - 3 * KYBER_SYMBYTES, 2 * KYBER_SYMBYTES);
   hash_g(kr, slen + KYBER_SYMBYTES, buf, 3 * KYBER_SYMBYTES);
 
-  /* coins are in kr + slen */
+  /* coins are in kr+KYBER_SYMBYTES */
   indcpa_enc(cmp, buf, pk, kr + slen);
 
   fail = verify(ct, cmp, KYBER_CIPHERTEXTBYTES);
 
   /* Compute rejection key */
-  rkprf(ss,sk + KYBER_SECRETKEYBYTES - KYBER_SYMBYTES,ct);
+  rkprf(ss,sk+KYBER_SECRETKEYBYTES-KYBER_SYMBYTES,ct);
 
   /* Copy true key to return buffer if fail is false */
   cmov(ss, kr , slen, !fail);

@@ -30,9 +30,13 @@ typedef struct {
 } kem_ct;
 
 int kem_keygen(kem_sk *sk, kem_pk *pk);
+
 int kem_encap(
     void *secret, size_t secret_len, kem_ct *ct,
     const kem_pk *pk);
+int kem_encap_seed(
+    void *secret, size_t secret_len, kem_ct *ct,
+    const kem_pk *pk, const void *m);
 int kem_decap(
     void *secret, size_t secret_len, const kem_ct *ct,
     const kem_sk *sk);

@@ -4,7 +4,6 @@
 #include "fips202.h"
 
 #include <string.h>
-#include <stdio.h>
 
 static const uint8_t aes_iv[12] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 

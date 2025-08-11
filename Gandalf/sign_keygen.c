@@ -58,9 +58,6 @@ static void decode_odd(int8_t u[N], const fpoly *utilde){
 
 }
 
-#define ANTRAG
-#ifdef ANTRAG
-
 int keygen_fg(sign_sk *sk){
 
   double z[N/2], af[N/2], ag[N/2],
@@ -136,8 +133,6 @@ int keygen_fg(sign_sk *sk){
     return trials;
 
 }
-
-#endif /* ANTRAG */
 
 int sign_keygen(sign_sk *sk, sign_pk *pk){
 
