@@ -48,9 +48,7 @@ int main(){
   assert(RING_K < 16);
 
   for(size_t i = 0; i < 16; i++){
-    sign_keygen_expanded_sk(expanded_sk + i, pk + i);
     sign_keygen(sk + i, pk + i);
-    expand_sign_sk(expanded_sk + i, sk + i);
   }
 
   for(size_t i = 0; i < RING_K; i++){
@@ -64,7 +62,7 @@ int main(){
   correct = 0;
   for(size_t i = 0; i < ITERATIONS; i++) {
     randombytes(m, MIN(i, MAXMBYTES));
-    Mitaka_sign_expanded_sk(&s, m, MIN(i, MAXMBYTES), &expanded_sk[0]);
+    Mitaka_sign(&s, m, MIN(i, MAXMBYTES), &sk[0]);
     correct += Mitaka_verify(m, MIN(i, MAXMBYTES), &pk[0], &s);
   }
   printf("  %d/%d correct signatures. (%s).\n\n", correct, ITERATIONS,
@@ -73,7 +71,7 @@ int main(){
   correct = 0;
   for(size_t i = 0; i < ITERATIONS; i++) {
     randombytes(m, MIN(i, MAXMBYTES));
-    Mitaka_sign_expanded_sk(&s, m, MIN(i, MAXMBYTES), &expanded_sk[1]);
+    Mitaka_sign(&s, m, MIN(i, MAXMBYTES), &sk[1]);
     correct += Mitaka_verify(m, MIN(i, MAXMBYTES), &pk[1], &s);
   }
   printf("  %d/%d correct signatures. (%s).\n\n", correct, ITERATIONS,
@@ -82,7 +80,7 @@ int main(){
   correct = 0;
   for(size_t i = 0; i < ITERATIONS; i++) {
     randombytes(m, MIN(i, MAXMBYTES));
-    Mitaka_sign_expanded_sk(&s, m, MIN(i, MAXMBYTES), &expanded_sk[0]);
+    Mitaka_sign(&s, m, MIN(i, MAXMBYTES), &sk[0]);
     correct += Mitaka_verify(m, MIN(i, MAXMBYTES), &pk[1], &s);
   }
   printf("  %d/%d correct signatures. (%s).\n\n", correct, ITERATIONS,
@@ -91,7 +89,7 @@ int main(){
   correct = 0;
   for(size_t i = 0; i < ITERATIONS; i++) {
     randombytes(m, MIN(i, MAXMBYTES));
-    Mitaka_sign_expanded_sk(&s, m, MIN(i, MAXMBYTES), &expanded_sk[1]);
+    Mitaka_sign(&s, m, MIN(i, MAXMBYTES), &sk[1]);
     correct += Mitaka_verify(m, MIN(i, MAXMBYTES), &pk[0], &s);
   }
   printf("  %d/%d correct signatures. (%s).\n\n", correct, ITERATIONS,

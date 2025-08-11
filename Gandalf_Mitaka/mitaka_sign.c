@@ -1,7 +1,8 @@
 
 #include "mitaka_sign.h"
-#include "randombytes.h"
 #include "mitaka_sampler.h"
+
+#include "randombytes.h"
 #include "fips202.h"
 #include "hash.h"
 #include "pack_unpack.h"
@@ -30,7 +31,6 @@ int poly_check_norm(const poly *p1, const poly *p2){
     return acc <= MITAKA_BOUND_SQUARE_FLOOR;
 
 }
-
 
 void Mitaka_sign_expanded_sk(sign_signature *s, const uint8_t *m, const size_t mlen, const sign_expanded_sk *sk){
 
@@ -61,6 +61,12 @@ void Mitaka_sign_expanded_sk(sign_signature *s, const uint8_t *m, const size_t m
         (s->salt)[i] = salt[i];
     }
 
+}
+
+void Mitaka_sign(sign_signature *s, const uint8_t *m, const size_t mlen, const sign_sk *sk) {
+    sign_expanded_sk expanded_sk;
+    expand_sign_sk(&expanded_sk, sk);
+    Mitaka_sign_expanded_sk(s, m, mlen, &expanded_sk);
 }
 
 

@@ -1,8 +1,9 @@
 
+#include "mitaka_sampler.h"
+
 #include "randombytes.h"
 #include "fft.h"
 #include "poly.h"
-#include "mitaka_sampler.h"
 
 #include <math.h>
 #include <stddef.h>

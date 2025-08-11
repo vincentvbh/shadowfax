@@ -3,6 +3,8 @@
 
 #define TABLE_SIZE 13
 
+#include "rsig_params.h"
+
 extern
 uint64_t CDT[TABLE_SIZE];
 

@@ -6,6 +6,7 @@
 #include <stddef.h>
 
 void Mitaka_sign_expanded_sk(sign_signature *s, const uint8_t *m, const size_t mlen, const sign_expanded_sk *sk);
+void Mitaka_sign(sign_signature *s, const uint8_t *m, const size_t mlen, const sign_sk *sk);
 int Mitaka_verify(const uint8_t *m, const size_t mlen, const sign_pk *pk, const sign_signature *s);
 
 #endif
