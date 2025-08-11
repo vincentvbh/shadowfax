@@ -22,8 +22,8 @@ int main(void) {
     for(int i = 0; i < ITERATIONS; i++){
 
         crypto_kem_keypair(pk, sk);
-        crypto_kem_enc(ct, key_b, 32, pk);
-        crypto_kem_dec(key_a, 32, ct, sk);
+        crypto_kem_enc(ct, key_b, pk);
+        crypto_kem_dec(key_a, ct, sk);
         correct += (memcmp(key_a, key_b, CRYPTO_BYTES) == 0);
 
     }
@@ -34,9 +34,9 @@ int main(void) {
     for(int i = 0; i < ITERATIONS; i++){
 
         crypto_kem_keypair(pk, sk);
-        crypto_kem_enc(ct, key_b, 32, pk);
+        crypto_kem_enc(ct, key_b, pk);
         randombytes(sk, CRYPTO_SECRETKEYBYTES);
-        crypto_kem_dec(key_a, 32, ct, sk);
+        crypto_kem_dec(key_a, ct, sk);
         correct += (memcmp(key_a, key_b, CRYPTO_BYTES) == 0);
 
     }
@@ -47,9 +47,9 @@ int main(void) {
     for(int i = 0; i < ITERATIONS; i++){
 
         crypto_kem_keypair(pk, sk);
-        crypto_kem_enc(ct, key_b, 32, pk);
+        crypto_kem_enc(ct, key_b, pk);
         ct[rand() % CRYPTO_CIPHERTEXTBYTES] ^= 0xff;
-        crypto_kem_dec(key_a, 32, ct, sk);
+        crypto_kem_dec(key_a, ct, sk);
         correct += (memcmp(key_a, key_b, CRYPTO_BYTES) == 0);
 
     }
