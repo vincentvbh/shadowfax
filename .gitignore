@@ -1,13 +1,6 @@
 
-**/.DS_Store
-**/__pycache__
-
-**/gen
-**/test
-**/speed
-**/speed_m1
-**/speed_a72
-**/speed_rsig
+.DS_Store
+__pycache__
 
 artifact*
 

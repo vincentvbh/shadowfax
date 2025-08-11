@@ -9,14 +9,11 @@
    destination). */
 static void
 basis_to_FFT(unsigned logn,
-	const int8_t *f, const int8_t *g, const int8_t *F, const int8_t *G,
-	fpr *dst)
+	fpr *b00, fpr *b01, fpr *b10, fpr *b11,
+	const int8_t *f, const int8_t *g, const int8_t *F, const int8_t *G)
+	// fpr *dst)
 {
 	size_t n = (size_t)1 << logn;
-	fpr *b00 = dst;
-	fpr *b01 = b00 + n;
-	fpr *b10 = b01 + n;
-	fpr *b11 = b10 + n;
 	fpoly_set_small(logn, b01, f);
 	fpoly_set_small(logn, b00, g);
 	fpoly_set_small(logn, b11, F);
@@ -161,11 +158,11 @@ sign_core(unsigned logn,
 		(void)trim_i8_decode(logn, sign_key_fgF + flen, g, nbits);
 		fpr *t0 = (fpr *)tmp;
 		fpr *t1 = t0 + n;
-		basis_to_FFT(logn, f, g, F, G, t1 + n);
 		fpr *b00 = t1 + n;
 		fpr *b01 = b00 + n;
 		fpr *b10 = b01 + n;
 		fpr *b11 = b10 + n;
+		basis_to_FFT(logn, b00, b01, b10, b11, f, g, F, G);
 		fpr *t2 = b11 + n;
 		memcpy(t2, b01, n * sizeof(fpr));
 		fpoly_gram_fft(logn, b00, b01, b10, b11);
@@ -219,69 +216,70 @@ sign_core(unsigned logn,
 		 * when floating-point operations are emulated.
 		 */
 
-		/* Convert [t0, t1] to integers modulo q. */
-		fpoly_iFFT(logn, t0);
-		fpoly_iFFT(logn, t1);
-		uint16_t *ut0 = (uint16_t *)(t1 + n);
-		uint16_t *ut1 = ut0 + n;
-		uint16_t *ut2 = ut1 + n;
-		uint16_t *ut3 = ut2 + n;
-		for (size_t i = 0; i < n; i ++) {
-			ut0[i] = (uint16_t)fpr_rint(t0[i]);
-			ut1[i] = (uint16_t)fpr_rint(t1[i]);
-		}
-		mqpoly_signed_to_int(logn, ut0);
-		mqpoly_signed_to_int(logn, ut1);
+		/*
+		 * We stay here in the floating-point domain for the
+		 * application of the basis. This happens to be faster
+		 * on our test platforms with a hardware FPU.
+		 */
 
-		/* Convert [t0,t1] to NTT. */
-		mqpoly_int_to_ntt(logn, ut0);
-		mqpoly_int_to_ntt(logn, ut1);
-
-		/* Decode (f,g) from the signing key. */
-		f = (int8_t *)(ut3 + n);
+		/* Get the lattice point corresponding to the sampled
+		   vector. This means computing:
+		      [v0,v1] = [t0,t1] * [[g, -f], [G, -F]]
+		   hence:
+		      v0 = t0*g + t1*G
+		      v1 = -t0*f - t1*F  */
+		fpr *w0 = t1 + n;
+		fpr *w1 = w0 + n;
+		f = (int8_t *)(w1 + n);
 		g = f + n;
 		(void)trim_i8_decode(logn, sign_key_fgF, f, nbits);
 		(void)trim_i8_decode(logn, sign_key_fgF + flen, g, nbits);
+		fpoly_set_small(logn, w0, g);
+		fpoly_set_small(logn, w1, f);
+		fpoly_FFT(logn, w0);
+		fpoly_FFT(logn, w1);
+		fpoly_mul_fft(logn, w1, t0);
+		fpoly_mul_fft(logn, t0, w0);
+		fpoly_set_small(logn, w0, G);
+		fpoly_FFT(logn, w0);
+		fpoly_mul_fft(logn, w0, t1);
+		fpoly_add(logn, t0, w0);
+		fpoly_set_small(logn, w0, F);
+		fpoly_FFT(logn, w0);
+		fpoly_mul_fft(logn, t1, w0);
+		fpoly_add(logn, t1, w1);
+		fpoly_neg(logn, t1);
+		fpoly_iFFT(logn, t0);
+		fpoly_iFFT(logn, t1);
 
-		/* s1 = hm - (g*t0 + G*t1).
-		   We compute s1 into ut3; we do not need to keep s1,
-		   only its squared norm. */
-		mqpoly_small_to_int(logn, g, ut2);
-		mqpoly_small_to_int(logn, G, ut3);
-		mqpoly_int_to_ntt(logn, ut2);
-		mqpoly_int_to_ntt(logn, ut3);
-		mqpoly_mul_ntt(logn, ut2, ut0);
-		mqpoly_mul_ntt(logn, ut3, ut1);
-		mqpoly_add(logn, ut2, ut3);
-		mqpoly_ntt_to_int(logn, ut2);
-		memcpy(ut3, hm, n * sizeof(uint16_t));
-		mqpoly_ext_to_int(logn, ut3);
-		mqpoly_sub(logn, ut3, ut2);
-		uint32_t sqn1 = mqpoly_sqnorm_int(logn, ut3);
+		/* We compute s1, then s2 into buffer s2 (s1 is not
+		   retained). We accumulate their squared norm in sqn,
+		   with an "overflow" flag in ng. */
+		uint32_t sqn = 0;
+		uint32_t ng = 0;
+		int16_t *s2 = (int16_t *)w0;
+		for (size_t i = 0; i < n; i ++) {
+			uint16_t zu = hm[i] - (uint16_t)fpr_rint(t0[i]);
+			int32_t z = *(int16_t *)&zu;
+			sqn += (uint32_t)(z * z);
+			ng |= sqn;
+		}
+		for (size_t i = 0; i < n; i ++) {
+			uint16_t zu = -(uint16_t)fpr_rint(t1[i]);
+			int32_t z = *(int16_t *)&zu;
+			sqn += (uint32_t)(z * z);
+			ng |= sqn;
+			s2[i] = (int16_t)z;
+		}
 
-		/* s2 = -(-f*t0 - F*t1) = f*t0 + F*t1
-		   We compute s2 into ut3. */
-		mqpoly_small_to_int(logn, f, ut2);
-		mqpoly_small_to_int(logn, F, ut3);
-		mqpoly_int_to_ntt(logn, ut2);
-		mqpoly_int_to_ntt(logn, ut3);
-		mqpoly_mul_ntt(logn, ut2, ut0);
-		mqpoly_mul_ntt(logn, ut3, ut1);
-		mqpoly_add(logn, ut3, ut2);
-		mqpoly_ntt_to_int(logn, ut3);
-		uint32_t sqn2 = mqpoly_sqnorm_int_to_signed(logn, ut3);
-
-		/* If either squared norm saturated, or the sum (i.e.
-		   the total squared norm of [s1,s2]) is too high, then
-		   we loop. */
-		uint32_t sqn = sqn1 + sqn2;
-		sqn1 |= sqn2;
-		sqn |= (uint32_t)(*(int32_t *)&sqn1 >> 31);
+		/* If the squared norm exceeds 2^31-1, then at some point
+		   the high bit of ng was set, which we use to saturate
+		   the squared norm to 2^32-1. If the squared norm is
+		   unacceptable, then we loop. */
+		sqn |= (uint32_t)(*(int32_t *)&ng >> 31);
 		if (!mqpoly_sqnorm_is_acceptable(logn, sqn)) {
 			continue;
 		}
-		int16_t *s2 = (int16_t *)ut3;
-
 
 		/* We have a candidate signature; we must encode it. This
 		   may fail, if the signature cannot be encoded in the
