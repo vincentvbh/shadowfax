@@ -122,21 +122,23 @@ sign_core(unsigned logn,
 			   It even works at n = 4 (logn = 2) because there
 			   are 58*4 = 232 bytes free in tmp[] at this point,
 			   and we need only 208. */
-			shake_context *sc = (shake_context *)tmp;
-			shake_init(sc, 256);
-			shake_inject(sc, seed, seed_len);
+			shake_context sc;
+			// shake_context *sc = (shake_context *)tmp;
+			shake_init(&sc, 256);
+			shake_inject(&sc, seed, seed_len);
 			uint8_t cbuf[4];
 			cbuf[0] = (uint8_t)counter;
 			cbuf[1] = (uint8_t)(counter >> 8);
 			cbuf[2] = (uint8_t)(counter >> 16);
 			cbuf[3] = (uint8_t)(counter >> 24);
-			shake_inject(sc, cbuf, 4);
-			shake_flip(sc);
-			shake_extract(sc, rndp, rndlen);
+			shake_inject(&sc, cbuf, 4);
+			shake_flip(&sc);
+			shake_extract(&sc, rndp, rndlen);
 		}
 
 		/* Hash the message into a polynomial. */
-		uint16_t *hm = (uint16_t *)((uint8_t *)tmp + 56 * n);
+		uint16_t hm[n];
+		// uint16_t *hm = (uint16_t *)((uint8_t *)tmp + 56 * n);
 		hash_to_point(logn, nonce, hashed_vk,
 			ctx, ctx_len, id, hv, hv_len, hm);
 
