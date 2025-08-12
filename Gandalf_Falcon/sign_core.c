@@ -27,6 +27,120 @@ basis_to_FFT(unsigned logn,
 	fpoly_neg(logn, b11);
 }
 
+// void
+// trapdoor_sampler(unsigned logn,
+// 		fpr *t0, fpr *t1,
+// 		const int8_t *f_src, const int8_t *g_src, const int8_t *F, const int8_t *G,
+// 		void *tmp) {
+
+// 		size_t n = (size_t)1 << logn;
+// 		size_t hn = n >> 1;
+
+// 		int8_t f[n];
+// 		int8_t g[n];
+// 		memcpy(f, f_src, n * sizeof(int8_t));
+// 		memcpy(g, g_src, n * sizeof(int8_t));
+// 		fpr b00[n];
+// 		fpr b01[n];
+// 		fpr b10[n];
+// 		fpr b11[n];
+// 		basis_to_FFT(logn, b00, b01, b10, b11, f, g, F, G);
+// 		fpr b01_cache[n];
+// 		memcpy(b01_cache, b01, n * sizeof(fpr));
+// 		fpoly_gram_fft(logn, b00, b01, b10, b11);
+
+// 		/* We now move things a bit to get the following (taking
+// 		   into account that g00 and g11 are self-adjoint, hence
+// 		   half-size):
+// 		      free space (2n)
+// 		      g01 (n)
+// 		      g00 (hn)
+// 		      g11 (hn)
+// 		      free space (n)
+// 		      b11 (n)
+// 		      b01 (n)  */
+// 		fpr g01[n];
+// 		fpr g00[hn];
+// 		fpr g11[hn];
+// 		memcpy(t1, b00, hn * sizeof(fpr));
+// 		memcpy(g01, b01, n * sizeof(fpr));
+// 		memcpy(g00, t1, hn * sizeof(fpr));
+// 		memcpy(g11, b10, hn * sizeof(fpr));
+
+// 		/* We now set the target [t0,t1] to [hm,0], then apply the
+// 		   lattice basis to obtain the real target vector (after
+// 		   normalization with regard to the modulus q).
+// 		   b11 is unchanged, but b01 is in b01_cache. */
+// 		fpoly_apply_basis(logn, t0, t1, b01_cache, b11, hm);
+
+// 		/* Current layout:
+// 		      t0  (n)
+// 		      t1  (n)
+// 		      g01 (n)
+// 		      g00 (hn)
+// 		      g11 (hn)
+// 		   We now do the Fast Fourier sampling, which uses
+// 		   up to 3*n slots beyond t1 (hence 7*n total usage
+// 		   in tmp[]). */
+// 		fpr *tmp_fpr = (fpr*)tmp;
+// 		memcpy(tmp_fpr, t0, n * sizeof(fpr));
+// 		memcpy(tmp_fpr + n, t1, n * sizeof(fpr));
+// 		memcpy(tmp_fpr + 2 * n, g01, n * sizeof(fpr));
+// 		memcpy(tmp_fpr + 3 * n, g00, hn * sizeof(fpr));
+// 		memcpy(tmp_fpr + 3 * n + hn, g11, hn * sizeof(fpr));
+// 		ffsamp_fft(&ss, tmp);
+// 		memcpy(t0, tmp_fpr, n * sizeof(fpr));
+// 		memcpy(t1, tmp_fpr + n, n * sizeof(fpr));
+
+// 		/*
+// 		 * At this point, [t0,t1] are the FFT representation of
+// 		 * the sampled vector; in normal (non-FFT) representation,
+// 		 * [t0,t1] is integral. We want to apply the lattice basis
+// 		 * Compute the lattice basis B = [[g, -f], [G, -F]] to that
+// 		 * vector, and subtract the result from [hm,0] to get the
+// 		 * signature value. These computations can be done either
+// 		 * in the FFT domain, or in with integers; and integer
+// 		 * computations can be done modulo q = 12289 since the
+// 		 * signature verification also works modulo q. Using
+// 		 * integers is faster than staying in FFT representation
+// 		 * when floating-point operations are emulated.
+// 		 */
+// 		/*
+// 		 * We stay here in the floating-point domain for the
+// 		 * application of the basis. This happens to be faster
+// 		 * on our test platforms with a hardware FPU.
+// 		 */
+
+// 		/* Get the lattice point corresponding to the sampled
+// 		   vector. This means computing:
+// 		      [v0,v1] = [t0,t1] * [[g, -f], [G, -F]]
+// 		   hence:
+// 		      v0 = t0*g + t1*G
+// 		      v1 = -t0*f - t1*F  */
+// 		fpr w0[n];
+// 		fpr w1[n];
+// 		memcpy(f, f_src, n * sizeof(int8_t));
+// 		memcpy(g, g_src, n * sizeof(int8_t));
+// 		fpoly_set_small(logn, w0, g);
+// 		fpoly_set_small(logn, w1, f);
+// 		fpoly_FFT(logn, w0);
+// 		fpoly_FFT(logn, w1);
+// 		fpoly_mul_fft(logn, w1, t0);
+// 		fpoly_mul_fft(logn, t0, w0);
+// 		fpoly_set_small(logn, w0, G);
+// 		fpoly_FFT(logn, w0);
+// 		fpoly_mul_fft(logn, w0, t1);
+// 		fpoly_add(logn, t0, w0);
+// 		fpoly_set_small(logn, w0, F);
+// 		fpoly_FFT(logn, w0);
+// 		fpoly_mul_fft(logn, t1, w0);
+// 		fpoly_add(logn, t1, w1);
+// 		fpoly_neg(logn, t1);
+// 		fpoly_iFFT(logn, t0);
+// 		fpoly_iFFT(logn, t1);
+
+// }
+
 /* see sign_inner.h */
 TARGET_SSE2 TARGET_NEON
 size_t
@@ -160,12 +274,22 @@ sign_core(unsigned logn,
 		      g11 (n)
 		      b11 (n)
 		      b01 (n)  */
-		int8_t f[n];
-		int8_t g[n];
-		(void)trim_i8_decode(logn, sign_key_fgF, f, nbits);
-		(void)trim_i8_decode(logn, sign_key_fgF + flen, g, nbits);
+		int8_t f_src[n];
+		int8_t g_src[n];
+		(void)trim_i8_decode(logn, sign_key_fgF, f_src, nbits);
+		(void)trim_i8_decode(logn, sign_key_fgF + flen, g_src, nbits);
+
 		fpr t0[n];
 		fpr t1[n];
+
+		// trapdoor_sampler(logn, t0, t1, f_src, g_src, F, G, tmp);
+
+#if 1
+
+		int8_t f[n];
+		int8_t g[n];
+		memcpy(f, f_src, n * sizeof(int8_t));
+		memcpy(g, g_src, n * sizeof(int8_t));
 		fpr b00[n];
 		fpr b01[n];
 		fpr b10[n];
@@ -245,8 +369,8 @@ sign_core(unsigned logn,
 		      v1 = -t0*f - t1*F  */
 		fpr w0[n];
 		fpr w1[n];
-		(void)trim_i8_decode(logn, sign_key_fgF, f, nbits);
-		(void)trim_i8_decode(logn, sign_key_fgF + flen, g, nbits);
+		memcpy(f, f_src, n * sizeof(int8_t));
+		memcpy(g, g_src, n * sizeof(int8_t));
 		fpoly_set_small(logn, w0, g);
 		fpoly_set_small(logn, w1, f);
 		fpoly_FFT(logn, w0);
@@ -265,12 +389,15 @@ sign_core(unsigned logn,
 		fpoly_iFFT(logn, t0);
 		fpoly_iFFT(logn, t1);
 
+#endif
+
 		/* We compute s1, then s2 into buffer s2 (s1 is not
 		   retained). We accumulate their squared norm in sqn,
 		   with an "overflow" flag in ng. */
 		uint32_t sqn = 0;
 		uint32_t ng = 0;
-		int16_t *s2 = (int16_t *)w0;
+		int16_t s2[n];
+		// int16_t *s2 = (int16_t *)w0;
 		for (size_t i = 0; i < n; i ++) {
 			uint16_t zu = hm[i] - (uint16_t)fpr_rint(t0[i]);
 			int32_t z = *(int16_t *)&zu;
