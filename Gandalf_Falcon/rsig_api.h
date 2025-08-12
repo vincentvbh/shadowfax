@@ -46,14 +46,9 @@ typedef struct {
     uint8_t salt[SALT_BYTES];
 } rsig_signature;
 
-int sign_keygen(sign_sk *sk, sign_pk *pk);
-// void expand_sign_sk(sign_expanded_sk *expanded_sk, const sign_sk *sk);
-// int sign_keygen_expanded_sk(sign_expanded_sk *sk, sign_pk *pk);
-
+void sign_keygen(sign_sk *sk, sign_pk *pk);
 void Gandalf_sign(rsig_signature *s, const uint8_t *m, const size_t mlen, const rsig_pk *pks,
     const sign_sk *sk, size_t party_id);
-// void Gandalf_sign_expanded_sk(rsig_signature *s, const uint8_t *m, const size_t mlen, const rsig_pk *pks,
-    // const sign_expanded_sk *expanded_sk, size_t party_id);
 int Gandalf_verify(const uint8_t *m, const size_t mlen, const rsig_signature *s, const rsig_pk *pks);
 
 #endif

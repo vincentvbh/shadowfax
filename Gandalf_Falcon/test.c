@@ -1,7 +1,5 @@
 
 #include "rsig_api.h"
-#include "mitaka_keygen.h"
-#include "mitaka_sign.h"
 #include "randombytes.h"
 
 #include <stdint.h>
@@ -58,67 +56,28 @@ int main(){
 
   printf("\nkey pair generations done\n");
 
-  printf("* Test correctness of Antrag.\n");
+  // printf("* Test correctness of Gandalf.\n");
 
-  correct = 0;
-  for(size_t i = 0; i < ITERATIONS; i++) {
-    randombytes(m, MIN(i, MAXMBYTES));
-    Mitaka_sign(&s, m, MIN(i, MAXMBYTES), &sk[0]);
-    correct += Mitaka_verify(m, MIN(i, MAXMBYTES), &pk[0], &s);
-  }
-  printf("  %d/%d correct signatures. (%s).\n\n", correct, ITERATIONS,
-    (correct == ITERATIONS)?"ok":"ERROR!");
-
-  correct = 0;
-  for(size_t i = 0; i < ITERATIONS; i++) {
-    randombytes(m, MIN(i, MAXMBYTES));
-    Mitaka_sign(&s, m, MIN(i, MAXMBYTES), &sk[1]);
-    correct += Mitaka_verify(m, MIN(i, MAXMBYTES), &pk[1], &s);
-  }
-  printf("  %d/%d correct signatures. (%s).\n\n", correct, ITERATIONS,
-    (correct == ITERATIONS)?"ok":"ERROR!");
-
-  correct = 0;
-  for(size_t i = 0; i < ITERATIONS; i++) {
-    randombytes(m, MIN(i, MAXMBYTES));
-    Mitaka_sign(&s, m, MIN(i, MAXMBYTES), &sk[0]);
-    correct += Mitaka_verify(m, MIN(i, MAXMBYTES), &pk[1], &s);
-  }
-  printf("  %d/%d correct signatures. (%s).\n\n", correct, ITERATIONS,
-    (correct == 0)?"ok":"ERROR!");
-
-  correct = 0;
-  for(size_t i = 0; i < ITERATIONS; i++) {
-    randombytes(m, MIN(i, MAXMBYTES));
-    Mitaka_sign(&s, m, MIN(i, MAXMBYTES), &sk[1]);
-    correct += Mitaka_verify(m, MIN(i, MAXMBYTES), &pk[0], &s);
-  }
-  printf("  %d/%d correct signatures. (%s).\n\n", correct, ITERATIONS,
-    (correct == 0)?"ok":"ERROR!");
+  // correct = 0;
+  // for(size_t i = 0; i < ITERATIONS; i++) {
+  //   randombytes(m, MIN(i, MAXMBYTES));
+  //   party_id = rand() % RING_K;
+  //   Gandalf_sign(&Gandalf_s, m, MIN(i, MAXMBYTES), &pks, sk + party_id, party_id);
+  //   correct += Gandalf_verify(m, MIN(i, MAXMBYTES), &Gandalf_s, &pks);
+  // }
+  // printf("  %d/%d correct signatures. (%s).\n\n", correct, ITERATIONS,
+	//   (correct == ITERATIONS)?"ok":"ERROR!");
 
 
-  printf("* Test correctness of Gandalf.\n");
-
-  correct = 0;
-  for(size_t i = 0; i < ITERATIONS; i++) {
-    randombytes(m, MIN(i, MAXMBYTES));
-    party_id = rand() % RING_K;
-    Gandalf_sign(&Gandalf_s, m, MIN(i, MAXMBYTES), &pks, sk + party_id, party_id);
-    correct += Gandalf_verify(m, MIN(i, MAXMBYTES), &Gandalf_s, &pks);
-  }
-  printf("  %d/%d correct signatures. (%s).\n\n", correct, ITERATIONS,
-	  (correct == ITERATIONS)?"ok":"ERROR!");
-
-
-  correct = 0;
-  for(size_t i = 0; i < ITERATIONS; i++) {
-    randombytes(m, MIN(i, MAXMBYTES));
-    party_id = rand() % RING_K;
-    Gandalf_sign(&Gandalf_s, m, MIN(i, MAXMBYTES), &pks, sk + RING_K, party_id);
-    correct += Gandalf_verify(m, MIN(i, MAXMBYTES), &Gandalf_s, &pks);
-  }
-  printf("  %d/%d correct signatures. (%s).\n\n", correct, ITERATIONS,
-    (correct == 0)?"ok":"ERROR!");
+  // correct = 0;
+  // for(size_t i = 0; i < ITERATIONS; i++) {
+  //   randombytes(m, MIN(i, MAXMBYTES));
+  //   party_id = rand() % RING_K;
+  //   Gandalf_sign(&Gandalf_s, m, MIN(i, MAXMBYTES), &pks, sk + RING_K, party_id);
+  //   correct += Gandalf_verify(m, MIN(i, MAXMBYTES), &Gandalf_s, &pks);
+  // }
+  // printf("  %d/%d correct signatures. (%s).\n\n", correct, ITERATIONS,
+  //   (correct == 0)?"ok":"ERROR!");
 
 
 

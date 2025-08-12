@@ -1065,6 +1065,9 @@ uint32_t avx2_poly_sqnorm(unsigned logn, const int8_t *f);
 int solve_NTRU(unsigned logn,
         const int8_t *restrict f, const int8_t *restrict g, uint32_t *tmp);
 
+#define check_fg_norm fndsa_check_fg_norm
+int check_fg_norm(const size_t n, const int8_t *f, const int8_t *g);
+
 /* Check that a given (f,g) has an acceptable orthogonolized norm.
    tmp[] must have room for 2.5*n fxr values */
 #define check_ortho_norm   fndsa_check_ortho_norm

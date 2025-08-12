@@ -83,7 +83,7 @@ OBJS      = $(patsubst %.c, %.o, $(SOURCES))
 TESTOBJ   = test_fndsa.o test_sampler.o test_sign.o
 SPEEDOBJ  = speed_fndsa.o
 
-all: test_fndsa speed_fndsa
+all: test test_fndsa speed_fndsa
 
 %.o: %.c $(HEADERS)
 	$(CC) $(CFLAGS) -c $< -o $@
@@ -94,6 +94,9 @@ test_fndsa: $(OBJS) $(TESTOBJ)
 speed_fndsa: $(OBJS) $(SPEEDOBJ)
 	$(LD) $(LDFLAGS) -o speed_fndsa $(OBJS) $(SPEEDOBJ)
 
+test: $(OBJS) $(HEADERS) test.c
+	$(CC) $(CFLAGS) $(OBJS) test.c -o test
+
 .PHONY: clean
 
 clean:
@@ -102,6 +105,7 @@ clean:
 	-rm -f $(SPEEDOBJ)
 	-rm -f test_fndsa
 	-rm -f speed_fndsa
+	-rm -f test
 
 
 

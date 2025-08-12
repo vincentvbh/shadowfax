@@ -6,7 +6,6 @@
 
 /* Ensure that ||(g, -f)|| < 1.17*sqrt(q),
 		   i.e. that ||(g, -f)||^2 < (1.17^2)*q = 16822.4121  */
-static
 int check_fg_norm(const size_t n, const int8_t *f, const int8_t *g) {
 	int32_t sn = 0;
 	int32_t xf, xg;
