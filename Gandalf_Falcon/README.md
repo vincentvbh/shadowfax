@@ -62,3 +62,22 @@ that code with a cross-compiling system toolchain. Alternatively, see
 the [bench_cm4/](bench_cm4) subdirectory for a benchmarking application
 that can run on an STM32F407G-DISC1 board (using an STM32F4
 microcontroller).
+
+# Gandalf
+
+- gandalf_samplerZ.h
+- gandalf_samplerZ.c
+- hash.c
+- hash.h
+- encode_decode.h
+- encode_decode.c
+- pack_unpack.h
+- pack_unpack.c
+- poly.h
+- poly.c
+- rsig.h
+- rsig.c
+- rsig_params.h
+- rsig_api.h
+- test.c
+

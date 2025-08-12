@@ -66,8 +66,18 @@ CFLAGS    = -W -Wextra -Wundef -Wshadow -O2
 LD        = gcc
 LDFLAGS   =
 
-SOURCES   = $(filter-out $(wildcard test*) $(wildcard speed*), $(wildcard *.c))
+RAND_PATH   = ../randombytes
+HASH_PATH   = ../hash
+
+CFLAGS   += -I. -I$(RAND_PATH) -I$(HASH_PATH)
+
 HEADERS   = $(wildcard *.h)
+HEADERS  += $(wildcard $(RAND_PATH)/*.h)
+HEADERS  += $(wildcard $(HASH_PATH)/*.h)
+
+SOURCES   = $(filter-out $(wildcard test*) $(wildcard speed*) samplerZ_table.c, $(wildcard *.c))
+SOURCES  += $(wildcard $(RAND_PATH)/*.c)
+SOURCES  += $(wildcard $(HASH_PATH)/*.c)
 
 OBJS      = $(patsubst %.c, %.o, $(SOURCES))
 TESTOBJ   = test_fndsa.o test_sampler.o test_sign.o
@@ -78,16 +88,16 @@ all: test_fndsa speed_fndsa
 %.o: %.c $(HEADERS)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-test_fndsa: $(OBJ) $(TESTOBJ)
+test_fndsa: $(OBJS) $(TESTOBJ)
 	$(LD) $(LDFLAGS) -o test_fndsa $(OBJS) $(TESTOBJ)
 
-speed_fndsa: $(OBJ) $(SPEEDOBJ)
+speed_fndsa: $(OBJS) $(SPEEDOBJ)
 	$(LD) $(LDFLAGS) -o speed_fndsa $(OBJS) $(SPEEDOBJ)
 
 .PHONY: clean
 
 clean:
-	-rm -f $(OBJ)
+	-rm -f $(OBJS)
 	-rm -f $(TESTOBJ)
 	-rm -f $(SPEEDOBJ)
 	-rm -f test_fndsa
