@@ -1192,7 +1192,7 @@ fpoly_FFT(unsigned logn, fpr *f)
 				z_re,
 				vextq_f64(z_re, z_re, 1));
 			float64x2_t u_im = vreinterpretq_f64_u64(
-				veorq_u64(cz.x, vreinterpretq_u64_f64(
+				veorq_u64(vreinterpretq_u64_f64(cz.x), vreinterpretq_u64_f64(
 					vaddq_f64(
 						z_im,
 						vextq_f64(z_im, z_im, 1)))));
@@ -1390,7 +1390,7 @@ fpoly_iFFT(unsigned logn, fpr *f)
 				(const float64_t *)GM + n + i);
 			/* sc <- re(s):-im(s)  (conjugation) */
 			float64x2_t sc = vreinterpretq_f64_u64(
-				veorq_u64(cz.x, vreinterpretq_u64_f64(s)));
+				veorq_u64( vreinterpretq_u64_f64(cz.x), vreinterpretq_u64_f64(s)));
 			/* xy_re <- re(x):re(y) */
 			float64x2_t xy_re = vld1q_f64(ff + i);
 			/* xy_im <- im(x):im(y) */
@@ -1810,7 +1810,7 @@ fpoly_mul_fft(unsigned logn, fpr *a, const fpr *b)
 		float64x2_t xcr = vmulq_f64(xa, xb);
 		float64x2_t xci = vmulq_f64(xa, vextq_f64(xb, xb, 1));
 		xcr = vreinterpretq_f64_u64(
-			veorq_u64(vreinterpretq_u64_f64(xcr), cz.x));
+			veorq_u64(vreinterpretq_u64_f64(xcr), vreinterpretq_u64_f64(cz.x)));
 		float64x2_t xc = vpaddq_f64(xcr, xci);
 		vst1q_f64((float64_t *)a, xc);
 	}

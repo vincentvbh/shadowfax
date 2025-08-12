@@ -524,7 +524,7 @@ sampler_next_neon(sampler_state *ss, float64x1_t mu, float64x1_t isigma)
 	static const fpr_u INV_2SQRSIGMA0_u = { INV_2SQRSIGMA0 };
 
 	/* Split center mu into s + r, for an integer s, and 0 <= r < 1. */
-	int32_t s = (int32_t)vcvtmd_s64_f64(mu);
+	int32_t s = (int32_t)vcvtmd_s64_f64(vget_lane_f64(mu, 0));
 	float64x1_t r = vsub_f64(mu, vcvt_f64_s64(vcreate_s64(s)));
 
 	/* dss = 1/(2*sigma^2) = 0.5*(isigma^2)  */
@@ -1048,7 +1048,7 @@ ffsamp_fft_deepest(sampler_state *ss, fpr *tmp)
 	float64x1_t zo_re = vget_low_f64(vpaddq_f64(zo, zo));
 	float64x1_t d00_re = g00_re;
 	float64x2_t l01 = vreinterpretq_f64_u64(
-		veorq_u64(cz.x, vreinterpretq_u64_f64(mu)));
+		veorq_u64(vreinterpretq_u64_f64(cz.x), vreinterpretq_u64_f64(mu)));
 	float64x1_t d11_re = vsub_f64(g11_re, zo_re);
 
 	/* No split on d00 and d11, since they are one-coeff each. */
@@ -1080,7 +1080,7 @@ ffsamp_fft_deepest(sampler_state *ss, fpr *tmp)
 	float64x2_t y = vcombine_f64(y0, y1);
 	float64x2_t a = vsubq_f64(w, y);
 	float64x2_t b1 = vmulq_f64(a,
-		vreinterpretq_f64_u64(veorq_u64(cz.x,
+		vreinterpretq_f64_u64(veorq_u64(vreinterpretq_u64_f64(cz.x),
 			vreinterpretq_u64_f64(l01))));
 	float64x2_t b2 = vmulq_f64(a, vextq_f64(l01, l01, 1));
 	float64x2_t b = vpaddq_f64(b1, b2);
