@@ -4,6 +4,20 @@
 
 #include "kgen_inner.h"
 
+/* Ensure that ||(g, -f)|| < 1.17*sqrt(q),
+		   i.e. that ||(g, -f)||^2 < (1.17^2)*q = 16822.4121  */
+static
+int check_fg_norm(const size_t n, const int8_t *f, const int8_t *g) {
+	int32_t sn = 0;
+	int32_t xf, xg;
+	for(size_t i = 0; i < n; i++) {
+		xf = (int32_t)f[i];
+		xg = (int32_t)g[i];
+		sn += xf * xf + xg * xg;
+	}
+	return sn >= 16823;
+}
+
 static void
 keygen_inner(unsigned logn, const void *seed, size_t seed_len,
 	void *sign_key, void *vrfy_key, void *tmp)
@@ -34,13 +48,7 @@ keygen_inner(unsigned logn, const void *seed, size_t seed_len,
 
 		/* Ensure that ||(g, -f)|| < 1.17*sqrt(q),
 		   i.e. that ||(g, -f)||^2 < (1.17^2)*q = 16822.4121  */
-		int32_t sn = 0;
-		for (size_t i = 0; i < n; i ++) {
-			int32_t xf = f[i];
-			int32_t xg = g[i];
-			sn += xf * xf + xg * xg;
-		}
-		if (sn >= 16823) {
+		if(check_fg_norm(n, f, g)){
 			continue;
 		}
 
