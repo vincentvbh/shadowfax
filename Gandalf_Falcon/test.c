@@ -56,17 +56,17 @@ int main(){
 
   printf("\nkey pair generations done\n");
 
-  // printf("* Test correctness of Gandalf.\n");
+  printf("* Test correctness of Gandalf.\n");
 
-  // correct = 0;
-  // for(size_t i = 0; i < ITERATIONS; i++) {
-  //   randombytes(m, MIN(i, MAXMBYTES));
-  //   party_id = rand() % RING_K;
-  //   Gandalf_sign(&Gandalf_s, m, MIN(i, MAXMBYTES), &pks, sk + party_id, party_id);
-  //   correct += Gandalf_verify(m, MIN(i, MAXMBYTES), &Gandalf_s, &pks);
-  // }
-  // printf("  %d/%d correct signatures. (%s).\n\n", correct, ITERATIONS,
-	//   (correct == ITERATIONS)?"ok":"ERROR!");
+  correct = 0;
+  for(size_t i = 0; i < ITERATIONS; i++) {
+    randombytes(m, MIN(i, MAXMBYTES));
+    party_id = rand() % RING_K;
+    Gandalf_sign(&Gandalf_s, m, MIN(i, MAXMBYTES), &pks, sk + party_id, party_id);
+    correct += Gandalf_verify(m, MIN(i, MAXMBYTES), &Gandalf_s, &pks);
+  }
+  printf("  %d/%d correct signatures. (%s).\n\n", correct, ITERATIONS,
+	  (correct == ITERATIONS)?"ok":"ERROR!");
 
 
   // correct = 0;

@@ -11,6 +11,8 @@
 #include <memory.h>
 #include <assert.h>
 
+#include <stdio.h>
+
 static
 int Gandalf_signature_check_norm(const poly u[RING_K], const poly v){
 
@@ -39,13 +41,20 @@ int Gandalf_signature_check_norm(const poly u[RING_K], const poly v){
 }
 
 static
-void sampler(poly *u, poly *v, const sign_sk *sk, const poly c) {
+void sampler(poly *u, poly *v, const sign_sk *sk, const poly c, const poly h) {
     fpr tmp[7 * N];
     uint8_t seed[56];
     // s1 -> v, s2 -> u
     int16_t s1[N], s2[N];
     int16_t c_buff[N];
     sampler_state ss;
+
+    poly f_poly, g_poly;
+    poly s1_poly, s2_poly;
+    poly c_poly;
+    poly acc_poly;
+    poly buff_poly;
+    poly LHS_poly, RHS_poly;
 
     randombytes(seed, 56);
     sampler_init(&ss, LOG_N, seed, 56);
@@ -54,6 +63,39 @@ void sampler(poly *u, poly *v, const sign_sk *sk, const poly c) {
         c_buff[i] = (int16_t)c.coeffs[i];
     }
     trapdoor_sampler(LOG_N, s1, s2, sk->f, sk->g, sk->F, sk->G, c_buff, seed, tmp);
+
+    for(size_t i = 0; i < N; i++){
+        f_poly.coeffs[i] = (int32_t)sk->f[i];
+        g_poly.coeffs[i] = (int32_t)sk->g[i];
+        c_poly.coeffs[i] = (int32_t)c.coeffs[i];
+        s1_poly.coeffs[i] = (int32_t)s1[i];
+        s2_poly.coeffs[i] = (int32_t)s2[i];
+    }
+
+    // f * h = g
+    poly_mul(&LHS_poly, &f_poly, &h);
+    poly_freeze(&LHS_poly, &LHS_poly);
+    poly_freeze(&RHS_poly, &g_poly);
+
+    for(size_t i = 0; i < N; i++){
+        assert(LHS_poly.coeffs[i] == RHS_poly.coeffs[i]);
+    }
+
+    // f * c = f * s1 + g * s2
+    // c = s1 + h * s2
+    poly_mul(&LHS_poly, &f_poly, &c_poly);
+    poly_freeze(&LHS_poly, &LHS_poly);
+
+    poly_mul(&RHS_poly, &f_poly, &s1_poly);
+    poly_mul(&buff_poly, &g_poly, &s2_poly);
+    poly_add(&RHS_poly, &RHS_poly, &buff_poly);
+    poly_freeze(&RHS_poly, &RHS_poly);
+
+    for(size_t i = 0; i < N; i++){
+        assert(LHS_poly.coeffs[i] == RHS_poly.coeffs[i]);
+    }
+
+    // c = v + h * u
     for(size_t i = 0; i < N; i++){
         u->coeffs[i] = (int32_t)s2[i];
         v->coeffs[i] = (int32_t)s1[i];
@@ -62,16 +104,34 @@ void sampler(poly *u, poly *v, const sign_sk *sk, const poly c) {
 
 }
 
-void Gandalf_sign_sk(rsig_signature *s, const uint8_t *m, const size_t mlen,
+void Gandalf_sign(rsig_signature *s, const uint8_t *m, const size_t mlen,
         const rsig_pk *pks, const sign_sk *sk, size_t party_id){
 
     poly hash, h_poly;
     poly v, acc;
     poly u[RING_K];
     poly c[RING_K];
+    poly f_poly, g_poly;
+    poly buff_poly;
 
     uint8_t salt[SALT_BYTES];
     shake128incctx state;
+
+    for(size_t i = 0; i < N; i++){
+        f_poly.coeffs[i] = (int32_t)sk->f[i];
+        g_poly.coeffs[i] = (int32_t)sk->g[i];
+    }
+
+    unpack_h(&h_poly, &(pks->hs[party_id]).h[0]);
+
+    poly_freeze(&f_poly, &f_poly);
+    poly_freeze(&g_poly, &g_poly);
+    poly_freeze(&h_poly, &h_poly);
+    poly_mul(&buff_poly, &h_poly, &f_poly);
+
+    for(size_t i = 0; i < N; i++){
+        assert(g_poly.coeffs[i] == buff_poly.coeffs[i]);
+    }
 
     do {
 
@@ -94,12 +154,49 @@ void Gandalf_sign_sk(rsig_signature *s, const uint8_t *m, const size_t mlen,
             poly_add(&acc, &acc, c + i);
         }
 
+        // c[party_id] = hash - h[!party_id] u[!party_id]
+        // hash = c[party_id] + h[!party_id] u[!party_id]
         poly_sub(c + party_id, &hash, &acc);
         poly_freeze(c + party_id, c + party_id);
 
-        sampler(u + party_id, &v, sk, c[party_id]);
+        // TODO: Make this constant-time.
+        for(size_t i = 0; i < N; i++){
+            if(c[party_id].coeffs[i] < 0)
+                c[party_id].coeffs[i] = Q - c[party_id].coeffs[i];
+            if(c[party_id].coeffs[i] > Q)
+                c[party_id].coeffs[i] = c[party_id].coeffs[i] - Q;
+            assert( (0 <= c[party_id].coeffs[i]) && (c[party_id].coeffs[i] < Q) );
+        }
+
+        unpack_h(&h_poly, &(pks->hs[party_id]).h[0]);
+
+        // c[party_id] = v + h[party_id] u[party_id]
+        // hash - h[!party_id] u[!party_id] = v + h[party_id] u[party_id]
+        // hash = v + h[party_id] u[party_id] + h[!party_id] u[!party_id]
+        sampler(u + party_id, &v, sk, c[party_id], h_poly);
+
+        // c[party_id] = v + h[party_id] * u[party_id]
+
+
+
+        // acc = v;
+        // for(size_t i = 0; i < RING_K; i++){
+        //     unpack_h(&h_poly, &(pks->hs[i]).h[0]);
+        //     poly_mul(&buff_poly, u + i, &h_poly);
+        //     poly_add(&acc, &acc, &buff_poly);
+        // }
+
+        // poly_freeze(&hash, &hash);
+        // poly_freeze(&acc, &acc);
+
+        // for(size_t i = 0; i < N; i++){
+        //     assert(hash.coeffs[i] == acc.coeffs[i]);
+        // }
+
 
     } while(Gandalf_signature_check_norm(u, v) == 0);
+
+    // hash = v + h (u0 + u1)
 
     // assert(Gandalf_signature_check_norm(u, v) == 1);
 
