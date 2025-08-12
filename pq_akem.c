@@ -7,18 +7,13 @@
 
 static const uint8_t aes_iv[12] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
-void pq_akem_keygen_expanded_sk(pq_akem_expanded_sk *expanded_sk, pq_akem_pk *pk){
-    kem_keygen(&expanded_sk->ksk, &pk->kpk);
-    sign_keygen_expanded_sk(&expanded_sk->ssk, &pk->spk);
-}
-
 void pq_akem_keygen(pq_akem_sk *sk, pq_akem_pk *pk){
     kem_keygen(&sk->ksk, &pk->kpk);
     sign_keygen(&sk->ssk, &pk->spk);
 }
 
-void pq_akem_encap_expanded_sk(uint8_t *pq_akem_k, pq_akem_ct *ct,
-                               const pq_akem_expanded_sk *sender_expanded_sk, const pq_akem_pk *sender_pk,
+void pq_akem_encap(uint8_t *pq_akem_k, pq_akem_ct *ct,
+                               const pq_akem_sk *sender_sk, const pq_akem_pk *sender_pk,
                                const pq_akem_pk *receiver_pk){
 
     kem_ct internal_kem_ct;
@@ -40,7 +35,7 @@ void pq_akem_encap_expanded_sk(uint8_t *pq_akem_k, pq_akem_ct *ct,
     internal_rsig_pk.hs[0] = sender_pk->spk;
     internal_rsig_pk.hs[1] = receiver_pk->spk;
 
-    Gandalf_sign_expanded_sk(&internal_signature, m, MLEN, &internal_rsig_pk, &sender_expanded_sk->ssk, 0);
+    Gandalf_sign(&internal_signature, m, MLEN, &internal_rsig_pk, &sender_sk->ssk, 0);
 
     aes128_ctr_keyexp(&ctx, kk);
     aes128_ctr(enc_rsig, (void*)&internal_signature, RSIG_SIGNATURE_BYTES, aes_iv, &ctx);
@@ -56,17 +51,6 @@ void pq_akem_encap_expanded_sk(uint8_t *pq_akem_k, pq_akem_ct *ct,
     sha3_256_inc_absorb(&hash_state, m, MLEN);
     sha3_256_inc_finalize(pq_akem_k, &hash_state);
     sha3_256_inc_ctx_release(&hash_state);
-
-}
-
-void pq_akem_encap(uint8_t *pq_akem_k, pq_akem_ct *ct,
-                   const pq_akem_sk *sender_sk, const pq_akem_pk *sender_pk, const pq_akem_pk *receiver_pk){
-
-    pq_akem_expanded_sk sender_expanded_sk;
-
-    sender_expanded_sk.ksk = sender_sk->ksk;
-    expand_sign_sk(&sender_expanded_sk.ssk, &sender_sk->ssk);
-    pq_akem_encap_expanded_sk(pq_akem_k, ct, &sender_expanded_sk, sender_pk, receiver_pk);
 
 }
 

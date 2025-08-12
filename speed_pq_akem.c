@@ -25,7 +25,6 @@ uint64_t cycles[NTESTS];
 int main(){
 
     pq_akem_sk sender_sk, receiver_sk;
-    pq_akem_expanded_sk sender_expanded_sk;
     pq_akem_pk sender_pk, receiver_pk;
     pq_akem_ct ct;
     rsig_pk internal_rsig_pk;
@@ -53,17 +52,9 @@ int main(){
 // ========
 // akem operations
 
-    WRAP_FUNC("pq_akem_keygen_expanded_sk",
-              cycles, time0, time1,
-              pq_akem_keygen_expanded_sk(&sender_expanded_sk, &sender_pk));
-
     WRAP_FUNC("pq_akem_keygen",
               cycles, time0, time1,
               pq_akem_keygen(&sender_sk, &sender_pk));
-
-    WRAP_FUNC("pq_akem_encap_expanded_sk",
-              cycles, time0, time1,
-              pq_akem_encap_expanded_sk(sender_secret, &ct, &sender_expanded_sk, &sender_pk, &receiver_pk));
 
     WRAP_FUNC("pq_akem_encap",
               cycles, time0, time1,
@@ -91,22 +82,9 @@ int main(){
 // ========
 // ring signature operations
 
-    WRAP_FUNC("sign_keygen_expanded_sk",
-              cycles, time0, time1,
-              sign_keygen_expanded_sk(&sender_expanded_sk.ssk, &sender_pk.spk));
-
     WRAP_FUNC("sign_keygen",
               cycles, time0, time1,
               sign_keygen(&sender_sk.ssk, &sender_pk.spk));
-
-    sign_keygen_expanded_sk(&sender_expanded_sk.ssk, &sender_pk.spk);
-    sign_keygen(&receiver_sk.ssk, &receiver_pk.spk);
-    internal_rsig_pk.hs[0] = sender_pk.spk;
-    internal_rsig_pk.hs[0] = receiver_pk.spk;
-
-    WRAP_FUNC("Gandalf_sign_expanded_sk",
-              cycles, time0, time1,
-              Gandalf_sign_expanded_sk(&internal_signature, m[i], MLEN, &internal_rsig_pk, &sender_expanded_sk.ssk, 0));
 
     sign_keygen(&sender_sk.ssk, &sender_pk.spk);
     WRAP_FUNC("Gandalf_sign",
@@ -116,18 +94,6 @@ int main(){
     WRAP_FUNC("Gandalf_verify",
               cycles, time0, time1,
               Gandalf_verify(m[i], MLEN, &internal_signature, &internal_rsig_pk));
-
-// ========
-// sampler
-
-    sign_keygen_expanded_sk(&sender_expanded_sk.ssk, &sender_pk.spk);
-    WRAP_FUNC("sampler",
-              cycles, time0, time1,
-              sampler(&a, &b, &sender_expanded_sk.ssk, c));
-
-    WRAP_FUNC("Gandalf_sample_poly",
-              cycles, time0, time1,
-              Gandalf_sample_poly(&a));
 
     return 0;
 

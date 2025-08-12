@@ -18,12 +18,6 @@ typedef struct {
 } h_akem_sk;
 
 typedef struct {
-    nike_sk nsk;
-    kem_sk ksk;
-    sign_expanded_sk ssk;
-} h_akem_expanded_sk;
-
-typedef struct {
     nike_pk npk;
     kem_pk kpk;
     sign_pk spk;
@@ -36,12 +30,8 @@ typedef struct {
 } h_akem_ct;
 
 
-void h_akem_keygen_expanded_sk(h_akem_expanded_sk *sk, h_akem_pk *pk);
 void h_akem_keygen(h_akem_sk *sk, h_akem_pk *pk);
 
-void h_akem_encap_expanded_sk(uint8_t *h_akem_k, h_akem_ct *ct,
-                              const h_akem_expanded_sk *sender_expanded_sk, const h_akem_pk *sender_pk,
-                              const h_akem_pk *receiver_pk);
 void h_akem_encap(uint8_t *h_akem_k, h_akem_ct *ct,
                   const h_akem_sk *sender_sk, const h_akem_pk *sender_pk, const h_akem_pk *receiver_pk);
 

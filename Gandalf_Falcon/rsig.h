@@ -2,6 +2,7 @@
 #define RSIG_H
 
 #include "rsig_params.h"
+#include "rsig_keygen_helper.h"
 #include <stddef.h>
 
 int32_t Gandalf_Gaussian_sampler();

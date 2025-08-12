@@ -16,11 +16,6 @@ typedef struct {
 } pq_akem_sk;
 
 typedef struct {
-    kem_sk ksk;
-    sign_expanded_sk ssk;
-} pq_akem_expanded_sk;
-
-typedef struct {
     kem_pk kpk;
     sign_pk spk;
 } pq_akem_pk;
@@ -30,11 +25,7 @@ typedef struct {
     uint8_t enc_rsig[RSIG_SIGNATURE_BYTES];
 } pq_akem_ct;
 
-void pq_akem_keygen_expanded_sk(pq_akem_expanded_sk *expanded_sk, pq_akem_pk *pk);
 void pq_akem_keygen(pq_akem_sk *sk, pq_akem_pk *pk);
-
-void pq_akem_encap_expanded_sk(uint8_t *pq_akem_k, pq_akem_ct *ct,
-                const pq_akem_expanded_sk *sender_expanded_sk, const pq_akem_pk *sender_pk, const pq_akem_pk *receiver_pk);
 void pq_akem_encap(uint8_t *pq_akem_k, pq_akem_ct *ct,
                 const pq_akem_sk *sender_sk, const pq_akem_pk *sender_pk, const pq_akem_pk *receiver_pk);
 

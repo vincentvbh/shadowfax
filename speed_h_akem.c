@@ -22,7 +22,6 @@ uint64_t cycles[NTESTS];
 int main(void){
 
     h_akem_sk sender_sk, receiver_sk;
-    h_akem_expanded_sk sender_expanded_sk;
     h_akem_pk sender_pk, receiver_pk;
     h_akem_ct ct;
     nike_s s;
@@ -41,17 +40,9 @@ int main(void){
 // ========
 // akem operations
 
-    WRAP_FUNC("h_akem_keygen_expanded_sk",
-              cycles, time0, time1,
-              h_akem_keygen_expanded_sk(&sender_expanded_sk, &sender_pk));
-
     WRAP_FUNC("h_akem_keygen",
               cycles, time0, time1,
               h_akem_keygen(&sender_sk, &sender_pk));
-
-    WRAP_FUNC("h_akem_encap_expanded_sk",
-              cycles, time0, time1,
-              h_akem_encap_expanded_sk(sender_secret, &ct, &sender_expanded_sk, &sender_pk, &receiver_pk));
 
     WRAP_FUNC("h_akem_encap",
               cycles, time0, time1,
@@ -90,10 +81,6 @@ int main(void){
 // ========
 // ring signature operations
 
-    WRAP_FUNC("sign_keygen_expanded_sk",
-              cycles, time0, time1,
-              sign_keygen_expanded_sk(&sender_expanded_sk.ssk, &sender_pk.spk));
-
     WRAP_FUNC("sign_keygen",
               cycles, time0, time1,
               sign_keygen(&sender_sk.ssk, &sender_pk.spk));
@@ -102,16 +89,10 @@ int main(void){
         randombytes(m[i], MLEN);
     }
 
-    sign_keygen_expanded_sk(&sender_expanded_sk.ssk, &sender_pk.spk);
     sign_keygen(&receiver_sk.ssk, &receiver_pk.spk);
+    sign_keygen(&sender_sk.ssk, &sender_pk.spk);
     internal_rsig_pk.hs[0] = sender_pk.spk;
     internal_rsig_pk.hs[0] = receiver_pk.spk;
-
-    WRAP_FUNC("Gandalf_sign_expanded_sk",
-              cycles, time0, time1,
-              Gandalf_sign_expanded_sk(&internal_signature, m[i], MLEN, &internal_rsig_pk, &sender_expanded_sk.ssk, 0));
-
-    sign_keygen(&sender_sk.ssk, &sender_pk.spk);
     WRAP_FUNC("Gandalf_sign",
               cycles, time0, time1,
               Gandalf_sign(&internal_signature, m[i], MLEN, &internal_rsig_pk, &sender_sk.ssk, 0));

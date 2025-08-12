@@ -8,20 +8,14 @@
 
 static const uint8_t aes_iv[12] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
-void h_akem_keygen_expanded_sk(h_akem_expanded_sk *sk, h_akem_pk *pk){
-    kem_keygen(&sk->ksk, &pk->kpk);
-    sign_keygen_expanded_sk(&sk->ssk, &pk->spk);
-    nike_keygen(&sk->nsk, &pk->npk);
-}
-
 void h_akem_keygen(h_akem_sk *sk, h_akem_pk *pk){
     kem_keygen(&sk->ksk, &pk->kpk);
     sign_keygen(&sk->ssk, &pk->spk);
     nike_keygen(&sk->nsk, &pk->npk);
 }
 
-void h_akem_encap_expanded_sk(uint8_t *h_akem_k, h_akem_ct *ct,
-                              const h_akem_expanded_sk *sender_expanded_sk, const h_akem_pk *sender_pk,
+void h_akem_encap(uint8_t *h_akem_k, h_akem_ct *ct,
+                              const h_akem_sk *sender_sk, const h_akem_pk *sender_pk,
                               const h_akem_pk *receiver_pk){
 
     kem_ct internal_kem_ct;
@@ -46,7 +40,7 @@ void h_akem_encap_expanded_sk(uint8_t *h_akem_k, h_akem_ct *ct,
     uint8_t *nk2 = nk1 + 32;
 
     nike_keygen(&e_nsk, &e_npk);
-    nike_sdk(&nkprime, &sender_expanded_sk->nsk, &receiver_pk->npk);
+    nike_sdk(&nkprime, &sender_sk->nsk, &receiver_pk->npk);
     hmac_sha3_256((uint8_t*)&nk.s, tag, sizeof(tag), nkprime.s);
     nike_sdk(&nk1k2, &e_nsk, &receiver_pk->npk);
 
@@ -58,7 +52,7 @@ void h_akem_encap_expanded_sk(uint8_t *h_akem_k, h_akem_ct *ct,
     internal_rsig_pk.hs[0] = sender_pk->spk;
     internal_rsig_pk.hs[1] = receiver_pk->spk;
 
-    Gandalf_sign_expanded_sk(&internal_signature, m, MLEN, &internal_rsig_pk, &sender_expanded_sk->ssk, 0);
+    Gandalf_sign(&internal_signature, m, MLEN, &internal_rsig_pk, &sender_sk->ssk, 0);
 
     hmac_sha3_256(kprime, k1, 32, nk1);
 
@@ -79,18 +73,6 @@ void h_akem_encap_expanded_sk(uint8_t *h_akem_k, h_akem_ct *ct,
 
     hmac_sha3_256(hmac_nk2, nk2, 32, nk.s);
     hmac_sha3_256(h_akem_k, hmac_out, 32, hmac_nk2);
-
-}
-
-void h_akem_encap(uint8_t *h_akem_k, h_akem_ct *ct,
-                  const h_akem_sk *sender_sk, const h_akem_pk *sender_pk, const h_akem_pk *receiver_pk){
-
-    h_akem_expanded_sk sender_expanded_sk;
-
-    sender_expanded_sk.ksk = sender_sk->ksk;
-    expand_sign_sk(&sender_expanded_sk.ssk, &sender_sk->ssk);
-    sender_expanded_sk.nsk = sender_sk->nsk;
-    h_akem_encap_expanded_sk(h_akem_k, ct, &sender_expanded_sk, sender_pk, receiver_pk);
 
 }
 
