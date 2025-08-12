@@ -27,7 +27,6 @@ print(f"// smoothing parameter {float(smoothingparameter)}")
 print(f"// square of smoothing parameter {float(smoothingparameter_square)}")
 print(f"// standard deviation {float(standarddev)}")
 
-
 def get_HalfGaussian_Mitaka_prob(x):
     return RN(RN(2) * e^(-(x^RN(2)) / (RN(2) * RN(1.7424))) / (RN(1.32) * sqrt(RN(2) * pi) + RN(1)))
 

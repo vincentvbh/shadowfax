@@ -29,7 +29,6 @@ basis_to_FFT(unsigned logn,
 
 void
 trapdoor_sampler(unsigned logn,
-		// fpr *t0, fpr *t1,
 		int16_t *s1, int16_t *s2,
 		const int8_t *f_src, const int8_t *g_src, const int8_t *F, const int8_t *G,
 		const uint16_t *c, const uint8_t *subseed,

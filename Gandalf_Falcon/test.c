@@ -12,6 +12,8 @@
 #include <memory.h>
 #include <assert.h>
 
+// TODO: Sync this file to Falcon.
+
 #define MAXMBYTES 2048
 #define ITERATIONS 2048
 #define MAX(x, y) ((x >= y)? (x):(y))

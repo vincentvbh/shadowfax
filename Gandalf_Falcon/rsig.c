@@ -38,10 +38,28 @@ int Gandalf_signature_check_norm(const poly u[RING_K], const poly v){
 
 }
 
-// TODO: Call trapdoor_sampler here.
 static
 void sampler(poly *u, poly *v, const sign_sk *sk, const poly c) {
-    return;
+    fpr tmp[7 * N];
+    uint8_t seed[56];
+    // s1 -> v, s2 -> u
+    int16_t s1[N], s2[N];
+    int16_t c_buff[N];
+    sampler_state ss;
+
+    randombytes(seed, 56);
+    sampler_init(&ss, LOG_N, seed, 56);
+
+    for(size_t i = 0; i < N; i++){
+        c_buff[i] = (int16_t)c.coeffs[i];
+    }
+    trapdoor_sampler(LOG_N, s1, s2, sk->f, sk->g, sk->F, sk->G, c_buff, seed, tmp);
+    for(size_t i = 0; i < N; i++){
+        u->coeffs[i] = (int32_t)s2[i];
+        v->coeffs[i] = (int32_t)s1[i];
+    }
+
+
 }
 
 void Gandalf_sign_sk(rsig_signature *s, const uint8_t *m, const size_t mlen,
