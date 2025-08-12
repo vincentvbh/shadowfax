@@ -177,6 +177,8 @@ chacha20rng_next_u64(chacha20rng_context *pc)
 #undef ffsamp_fft_deepest
 #define ffsamp_fft_deepest   chacha20_ffsamp_fft_deepest
 
+#undef trapdoor_sampler
+#define trapdoor_sampler chacha20_trapdoor_sampler
 #include "sign_sampler.c"
 
 #undef sign_core
