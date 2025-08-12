@@ -68,16 +68,15 @@ int main(){
   printf("  %d/%d correct signatures. (%s).\n\n", correct, ITERATIONS,
 	  (correct == ITERATIONS)?"ok":"ERROR!");
 
-
-  // correct = 0;
-  // for(size_t i = 0; i < ITERATIONS; i++) {
-  //   randombytes(m, MIN(i, MAXMBYTES));
-  //   party_id = rand() % RING_K;
-  //   Gandalf_sign(&Gandalf_s, m, MIN(i, MAXMBYTES), &pks, sk + RING_K, party_id);
-  //   correct += Gandalf_verify(m, MIN(i, MAXMBYTES), &Gandalf_s, &pks);
-  // }
-  // printf("  %d/%d correct signatures. (%s).\n\n", correct, ITERATIONS,
-  //   (correct == 0)?"ok":"ERROR!");
+  correct = 0;
+  for(size_t i = 0; i < ITERATIONS; i++) {
+    randombytes(m, MIN(i, MAXMBYTES));
+    party_id = rand() % RING_K;
+    Gandalf_sign(&Gandalf_s, m, MIN(i, MAXMBYTES), &pks, sk + RING_K, party_id);
+    correct += Gandalf_verify(m, MIN(i, MAXMBYTES), &Gandalf_s, &pks);
+  }
+  printf("  %d/%d correct signatures. (%s).\n\n", correct, ITERATIONS,
+    (correct == 0)?"ok":"ERROR!");
 
 
 
