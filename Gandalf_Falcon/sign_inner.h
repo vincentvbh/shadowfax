@@ -664,10 +664,13 @@ void ffsamp_fft(sampler_state *ss, fpr *tmp);
 #define trapdoor_sampler fndsa_trapdoor_sampler
 void
 trapdoor_sampler(unsigned logn,
-		fpr *t0, fpr *t1,
+		int16_t *s1, int16_t *s2,
 		const int8_t *f_src, const int8_t *g_src, const int8_t *F, const int8_t *G,
 		const uint16_t *c, const uint8_t *subseed,
 		void *tmp);
+
+#define check_norm fndsa_check_norm
+int check_norm(const size_t logn, int16_t *s1, int16_t *s2);
 
 /* Internal signing function. The complete signing key (encoded for f,
    g and F, but skipping the leading header byte, and decoded for G) is

@@ -179,6 +179,9 @@ chacha20rng_next_u64(chacha20rng_context *pc)
 
 #undef trapdoor_sampler
 #define trapdoor_sampler chacha20_trapdoor_sampler
+#undef check_norm
+#define check_norm chacha20_check_norm
+
 #include "sign_sampler.c"
 
 #undef sign_core

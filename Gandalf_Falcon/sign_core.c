@@ -29,7 +29,8 @@ basis_to_FFT(unsigned logn,
 
 void
 trapdoor_sampler(unsigned logn,
-		fpr *t0, fpr *t1,
+		// fpr *t0, fpr *t1,
+		int16_t *s1, int16_t *s2,
 		const int8_t *f_src, const int8_t *g_src, const int8_t *F, const int8_t *G,
 		const uint16_t *c, const uint8_t *subseed,
 		void *tmp) {
@@ -44,6 +45,8 @@ trapdoor_sampler(unsigned logn,
 		int8_t g[n];
 		memcpy(f, f_src, n * sizeof(int8_t));
 		memcpy(g, g_src, n * sizeof(int8_t));
+		fpr t0[n];
+		fpr t1[n];
 		fpr b00[n];
 		fpr b01[n];
 		fpr b10[n];
@@ -143,6 +146,43 @@ trapdoor_sampler(unsigned logn,
 		fpoly_iFFT(logn, t0);
 		fpoly_iFFT(logn, t1);
 
+		for(size_t i = 0; i < n; i++){
+			s1[i] = (int16_t)(c[i] - (uint16_t)fpr_rint(t0[i]));
+		}
+
+		for(size_t i = 0; i < n; i++){
+			s2[i] = (int16_t)(-(uint16_t)fpr_rint(t1[i]));
+		}
+
+}
+
+static
+uint32_t compute_sqn(const size_t n, int16_t *s1, int16_t *s2){
+		/* We compute the saturated squared norm in sqn with
+		   an "overflow" flag in ng. */
+		uint32_t sqn = 0;
+		uint32_t ng = 0;
+		int32_t z;
+		for(size_t i = 0; i < n; i++){
+			z = (int32_t)s1[i];
+			sqn += (uint32_t)(z * z);
+			ng |= sqn;
+		}
+		for(size_t i = 0; i < n; i++){
+			z = (int32_t)s2[i];
+			sqn += (uint32_t)(z * z);
+			ng |= sqn;
+		}
+		/* If the squared norm exceeds 2^31 - 1, we saturate it to
+		   2^32 - 1. */
+		sqn |= (uint32_t)(*(int32_t *)&ng >> 31);
+		return sqn;
+}
+
+int check_norm(const size_t logn, int16_t *s1, int16_t *s2) {
+		size_t n = (size_t)1 << logn;
+		uint32_t sqn = compute_sqn(n, s1, s2);
+		return mqpoly_sqnorm_is_acceptable(logn, sqn);
 }
 
 /* see sign_inner.h */
@@ -289,34 +329,13 @@ sign_core(unsigned logn,
 		fpr t0[n];
 		fpr t1[n];
 
-		trapdoor_sampler(logn, t0, t1, f_src, g_src, F, G, hm, subseed, tmp);
-
-		/* We compute s1, then s2 into buffer s2 (s1 is not
-		   retained). We accumulate their squared norm in sqn,
-		   with an "overflow" flag in ng. */
-		uint32_t sqn = 0;
-		uint32_t ng = 0;
+		int16_t s1[n];
 		int16_t s2[n];
-		for (size_t i = 0; i < n; i ++) {
-			uint16_t zu = hm[i] - (uint16_t)fpr_rint(t0[i]);
-			int32_t z = *(int16_t *)&zu;
-			sqn += (uint32_t)(z * z);
-			ng |= sqn;
-		}
-		for (size_t i = 0; i < n; i ++) {
-			uint16_t zu = -(uint16_t)fpr_rint(t1[i]);
-			int32_t z = *(int16_t *)&zu;
-			sqn += (uint32_t)(z * z);
-			ng |= sqn;
-			s2[i] = (int16_t)z;
-		}
 
-		/* If the squared norm exceeds 2^31-1, then at some point
-		   the high bit of ng was set, which we use to saturate
-		   the squared norm to 2^32-1. If the squared norm is
-		   unacceptable, then we loop. */
-		sqn |= (uint32_t)(*(int32_t *)&ng >> 31);
-		if (!mqpoly_sqnorm_is_acceptable(logn, sqn)) {
+		trapdoor_sampler(logn, s1, s2, f_src, g_src, F, G, hm, subseed, tmp);
+
+		/* If the squared norm is unacceptable, then we loop. */
+		if(!check_norm(logn, s1, s2)) {
 			continue;
 		}
 
