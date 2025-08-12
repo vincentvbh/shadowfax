@@ -41,8 +41,6 @@ trapdoor_sampler(unsigned logn,
 		size_t n = (size_t)1 << logn;
 		size_t hn = n >> 1;
 
-
-
 		sampler_state ss;
 		sampler_init(&ss, logn, subseed, 56);
 
@@ -168,35 +166,6 @@ trapdoor_sampler(unsigned logn,
 
 		for(size_t i = 0; i < n; i++){
 			s2[i] = (int16_t)(-(uint16_t)fpr_rint(t1[i]));
-		}
-
-		if(n == 512){
-
-			// f * c = f * s1 + g * s2
-			poly f_poly, g_poly, c_poly, s1_poly, s2_poly;
-			poly LHS_poly, RHS_poly;
-			poly buff_poly;
-
-			for(size_t i = 0; i < n; i++){
-				f_poly.coeffs[i] = (int32_t)f[i];
-				g_poly.coeffs[i] = (int32_t)g[i];
-				c_poly.coeffs[i] = (int32_t)c[i];
-				s1_poly.coeffs[i] = (int32_t)s1[i];
-				s2_poly.coeffs[i] = (int32_t)s2[i];
-			}
-
-			poly_mul(&LHS_poly, &f_poly, &c_poly);
-			poly_freeze(&LHS_poly, &LHS_poly);
-
-			poly_mul(&RHS_poly, &f_poly, &s1_poly);
-			poly_mul(&buff_poly, &g_poly, &s2_poly);
-			poly_add(&RHS_poly, &RHS_poly, &buff_poly);
-			poly_freeze(&RHS_poly, &RHS_poly);
-
-			for(size_t i = 0; i < n; i++){
-				assert(LHS_poly.coeffs[i] == RHS_poly.coeffs[i]);
-			}
-
 		}
 
 }
