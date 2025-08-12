@@ -61,104 +61,39 @@
 # By default, this code compiles 'test_fndsa' (a test framework to validate
 # that all computations are correct) and 'speed_fndsa' (speed benchmarks).
 
-CC       = gcc
-CFLAGS   = -W -Wextra -Wundef -Wshadow -O2
-LD       = gcc
-LDFLAGS  =
-LIBS     =
+CC        = gcc
+CFLAGS    = -W -Wextra -Wundef -Wshadow -O2
+LD        = gcc
+LDFLAGS   =
 
-SOURCES  = $(filter-out $(wildcard test*) $(wildcard speed*), $(wildcard *.c))
-HEADERS  = $(wildcard *.h)
+SOURCES   = $(filter-out $(wildcard test*) $(wildcard speed*), $(wildcard *.c))
+HEADERS   = $(wildcard *.h)
 
-# OBJ_COMM = codec.o mq.o sha3.o sysrng.o util.o
-# OBJ_KGEN = kgen.o kgen_fxp.o kgen_gauss.o kgen_mp31.o kgen_ntru.o kgen_poly.o kgen_zint31.o
-# OBJ_SIGN = sign.o sign_core.o sign_fpoly.o sign_fpr.o sign_sampler.o
-# OBJ_VRFY = vrfy.o
-# OBJ = $(OBJ_COMM) $(OBJ_KGEN) $(OBJ_SIGN) $(OBJ_VRFY)
-OBJ      = $(patsubst %.c, %.o, $(SOURCES))
-TESTOBJ = test_fndsa.o test_sampler.o test_sign.o
-SPEEDOBJ = speed_fndsa.o
+OBJS      = $(patsubst %.c, %.o, $(SOURCES))
+TESTOBJ   = test_fndsa.o test_sampler.o test_sign.o
+SPEEDOBJ  = speed_fndsa.o
 
 all: test_fndsa speed_fndsa
 
-clean:
-	-rm -f $(OBJ) $(TESTOBJ) $(SPEEDOBJ) test_fndsa speed_fndsa
-
-test_fndsa: $(OBJ) $(TESTOBJ)
-	$(LD) $(LDFLAGS) -o test_fndsa $(OBJ) $(TESTOBJ) $(LIBS)
-
-speed_fndsa: $(OBJ) $(SPEEDOBJ)
-	$(LD) $(LDFLAGS) -o speed_fndsa $(OBJ) $(SPEEDOBJ) $(LIBS)
-
-# -----------------------------------------------------------------------
-
-# codec.o: codec.c $(HEADERS)
-# 	$(CC) $(CFLAGS) -c -o codec.o codec.c
-
-# mq.o: mq.c $(HEADERS)
-# 	$(CC) $(CFLAGS) -c -o mq.o mq.c
-
-# sha3.o: sha3.c $(HEADERS)
-# 	$(CC) $(CFLAGS) -c -o sha3.o sha3.c
-
-# sysrng.o: sysrng.c $(HEADERS)
-# 	$(CC) $(CFLAGS) -c -o sysrng.o sysrng.c
-
-# util.o: util.c $(HEADERS)
-# 	$(CC) $(CFLAGS) -c -o util.o util.c
-
-# kgen.o: kgen.c fndsa.h kgen_inner.h inner.h
-# 	$(CC) $(CFLAGS) -c -o kgen.o kgen.c
-
-# kgen_fxp.o: kgen_fxp.c fndsa.h kgen_inner.h inner.h
-# 	$(CC) $(CFLAGS) -c -o kgen_fxp.o kgen_fxp.c
-
-# kgen_gauss.o: kgen_gauss.c fndsa.h kgen_inner.h inner.h
-# 	$(CC) $(CFLAGS) -c -o kgen_gauss.o kgen_gauss.c
-
-# kgen_mp31.o: kgen_mp31.c fndsa.h kgen_inner.h inner.h
-# 	$(CC) $(CFLAGS) -c -o kgen_mp31.o kgen_mp31.c
-
-# kgen_ntru.o: kgen_ntru.c fndsa.h kgen_inner.h inner.h
-# 	$(CC) $(CFLAGS) -c -o kgen_ntru.o kgen_ntru.c
-
-# kgen_poly.o: kgen_poly.c fndsa.h kgen_inner.h inner.h
-# 	$(CC) $(CFLAGS) -c -o kgen_poly.o kgen_poly.c
-
-# kgen_zint31.o: kgen_zint31.c fndsa.h kgen_inner.h inner.h
-# 	$(CC) $(CFLAGS) -c -o kgen_zint31.o kgen_zint31.c
-
-# sign.o: sign.c fndsa.h sign_inner.h inner.h
-# 	$(CC) $(CFLAGS) -c -o sign.o sign.c
-
-# sign_core.o: sign_core.c fndsa.h sign_inner.h inner.h
-# 	$(CC) $(CFLAGS) -c -o sign_core.o sign_core.c
-
-# sign_fpoly.o: sign_fpoly.c fndsa.h sign_inner.h inner.h
-# 	$(CC) $(CFLAGS) -c -o sign_fpoly.o sign_fpoly.c
-
-# sign_fpr.o: sign_fpr.c fndsa.h sign_inner.h inner.h
-# 	$(CC) $(CFLAGS) -c -o sign_fpr.o sign_fpr.c
-
-# sign_sampler.o: sign_sampler.c fndsa.h sign_inner.h inner.h
-# 	$(CC) $(CFLAGS) -c -o sign_sampler.o sign_sampler.c
-
-# vrfy.o: vrfy.c $(HEADERS)
-# 	$(CC) $(CFLAGS) -c -o vrfy.o vrfy.c
-
-# test_fndsa.o: test_fndsa.c $(HEADERS) kgen_inner.h sign_inner.h
-# 	$(CC) $(CFLAGS) -c -o test_fndsa.o test_fndsa.c
-
-# test_sampler.o: test_sampler.c sign_sampler.c fndsa.h sign_inner.h inner.h
-# 	$(CC) $(CFLAGS) -c -o test_sampler.o test_sampler.c
-
-# test_sign.o: test_sign.c sign_sampler.c sign_core.c fndsa.h sign_inner.h inner.h
-# 	$(CC) $(CFLAGS) -c -o test_sign.o test_sign.c
-
-# speed_fndsa.o: speed_fndsa.c $(HEADERS)
-# 	$(CC) $(CFLAGS) -c -o speed_fndsa.o speed_fndsa.c
-
 %.o: %.c $(HEADERS)
 	$(CC) $(CFLAGS) -c $< -o $@
+
+test_fndsa: $(OBJ) $(TESTOBJ)
+	$(LD) $(LDFLAGS) -o test_fndsa $(OBJS) $(TESTOBJ)
+
+speed_fndsa: $(OBJ) $(SPEEDOBJ)
+	$(LD) $(LDFLAGS) -o speed_fndsa $(OBJS) $(SPEEDOBJ)
+
+.PHONY: clean
+
+clean:
+	-rm -f $(OBJ)
+	-rm -f $(TESTOBJ)
+	-rm -f $(SPEEDOBJ)
+	-rm -f test_fndsa
+	-rm -f speed_fndsa
+
+
+
 
 

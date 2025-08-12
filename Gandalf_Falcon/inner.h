@@ -107,13 +107,6 @@
    intrinsics in that function. */
 #if FNDSA_NEON
 #define TARGET_NEON
-// #if defined __GNUC__ || defined __clang__
-// #define TARGET_NEON    __attribute__((target("neon")))
-// #else
-// #define TARGET_NEON
-// #endif
-// #else
-// #define TARGET_NEON
 #endif
 
 #if FNDSA_NEON
