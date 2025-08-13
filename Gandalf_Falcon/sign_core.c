@@ -18,7 +18,6 @@ basis_to_FFT(unsigned logn,
 	fpr *b00, fpr *b01, fpr *b10, fpr *b11,
 	const int8_t *f, const int8_t *g, const int8_t *F, const int8_t *G)
 {
-	size_t n = (size_t)1 << logn;
 	fpoly_set_small(logn, b01, f);
 	fpoly_set_small(logn, b00, g);
 	fpoly_set_small(logn, b11, F);
@@ -226,7 +225,6 @@ sign_core(unsigned logn,
 	   generation). */
 
 	size_t n = (size_t)1 << logn;
-	size_t hn = n >> 1;
 	unsigned nbits;
 	switch (logn) {
 	case 2: case 3: case 4: case 5:
@@ -339,9 +337,6 @@ sign_core(unsigned logn,
 		int8_t g_src[n];
 		(void)trim_i8_decode(logn, sign_key_fgF, f_src, nbits);
 		(void)trim_i8_decode(logn, sign_key_fgF + flen, g_src, nbits);
-
-		fpr t0[n];
-		fpr t1[n];
 
 		int16_t s1[n];
 		int16_t s2[n];

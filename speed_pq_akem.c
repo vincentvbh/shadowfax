@@ -3,8 +3,6 @@
 #include "randombytes.h"
 #include "pq_akem_api.h"
 #include "rsig_api.h"
-#include "mitaka_sampler.h"
-#include "gandalf_samplerZ.h"
 
 #include <stdint.h>
 #include <stdio.h>

@@ -62,7 +62,7 @@
 # that all computations are correct) and 'speed_fndsa' (speed benchmarks).
 
 CC        = gcc
-CFLAGS    = -W -Wextra -Wundef -Wshadow -O2
+CFLAGS    = -Wall -O2
 LD        = gcc
 LDFLAGS   =
 

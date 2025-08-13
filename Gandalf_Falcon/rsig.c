@@ -46,14 +46,14 @@ void sampler(poly *u, poly *v, const sign_sk *sk, const poly c, const poly h) {
     uint8_t seed[56];
     // s1 -> v, s2 -> u
     int16_t s1[N], s2[N];
-    int16_t c_buff[N];
+    uint16_t c_buff[N];
     sampler_state ss;
 
     randombytes(seed, 56);
     sampler_init(&ss, LOG_N, seed, 56);
 
     for(size_t i = 0; i < N; i++){
-        c_buff[i] = (int16_t)c.coeffs[i];
+        c_buff[i] = (uint16_t)c.coeffs[i];
     }
     trapdoor_sampler(LOG_N, s1, s2, sk->f, sk->g, sk->F, sk->G, c_buff, seed, tmp);
     // c = v + h * u

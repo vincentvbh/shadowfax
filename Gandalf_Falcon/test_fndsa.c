@@ -2315,6 +2315,7 @@ test_mq(void)
 	fflush(stdout);
 }
 
+#if !FNDSA_SSE2 && !FNDSA_NEON
 static uint64_t
 rand_u64(shake256x4_context *pc)
 {
@@ -2366,7 +2367,6 @@ NOINLINE
 static void
 test_fpr(void)
 {
-#if !FNDSA_SSE2 && !FNDSA_NEON
 	printf("Test floating-point: ");
 	fflush(stdout);
 
@@ -2528,8 +2528,9 @@ test_fpr(void)
 
 	printf(" done.\n");
 	fflush(stdout);
-#endif
 }
+#endif
+
 
 NOINLINE
 static void
@@ -4846,7 +4847,9 @@ run_tests(void)
 	test_modq_codec();
 	test_comp_codec();
 	test_mq();
+#if !FNDSA_SSE2 && !FNDSA_NEON
 	test_fpr();
+#endif
 	test_fpoly();
 	test_sample_f();
 	test_sampler();
