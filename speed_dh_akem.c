@@ -26,6 +26,10 @@ int main(void){
     nike_s s1;
     uint8_t nike_akem_secret1[NIKE_BYTES], nike_akem_secret2[NIKE_BYTES];
 
+    printf("NIKE AKEM public key bytes: %4zu\n", sizeof(nike_pk));
+    printf("NIKE AKEM secret key bytes: %4zu\n", sizeof(nike_sk));
+    printf("NIKE AKEM ciphertext bytes: %4zu\n", sizeof(nike_pk));
+
     // initialize randombyte seed
     init_prng();
 

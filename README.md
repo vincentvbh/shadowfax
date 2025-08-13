@@ -39,17 +39,20 @@ Type `./test_dh_akem`. Sample output:
 ### Benchmark
 Type `./speed_dh_akem`. Sample output:
 ```
+NIKE AKEM public key bytes:   32
+NIKE AKEM secret key bytes:   32
+NIKE AKEM ciphertext bytes:   32
 loaded db: a14 (Apple A14/M1)
 number of fixed counters: 2
 number of configurable counters: 8
 nike_akem_encap average cycles:
-679291
+681381
 nike_akem_decap average cycles:
-456717
+457801
 nike_keygen average cycles:
-226693
+225816
 nike_sdk average cycles:
-226852
+227496
 ```
 
 ## PQ-AKEM
@@ -73,87 +76,99 @@ Type `./speed_pq_akem`.
 
 Sample output:
 ```
+Post-quantum AKEM public key bytes: 1417
+Post-quantum AKEM secret key bytes: 5001
+Post-quantum AKEM ciphertext bytes: 1749
 loaded db: a14 (Apple A14/M1)
 number of fixed counters: 2
 number of configurable counters: 8
 pq_akem_keygen average cycles:
-25345954
+25120603
 pq_akem_encap average cycles:
-1297677
+1290788
 pq_akem_decap average cycles:
-344635
+351922
 kem_keygen average cycles:
-11851947
+12151852
 kem_encap average cycles:
-58497
+57535
 kem_decap average cycles:
-230252
+231445
 sign_keygen average cycles:
-13436393
+13448897
 Gandalf_sign average cycles:
-1158665
+1167662
 Gandalf_verify average cycles:
-100989
+101712
 ```
 
 #### `bat-257` + `falcon-512`
 
 Sample output:
 ```
+Post-quantum AKEM public key bytes: 1417
+Post-quantum AKEM secret key bytes: 5001
+Post-quantum AKEM ciphertext bytes: 1749
 loaded db: a14 (Apple A14/M1)
 number of fixed counters: 2
 number of configurable counters: 8
 pq_akem_keygen average cycles:
-24724761
+24276542
 pq_akem_encap average cycles:
-1074998
+1081467
 pq_akem_decap average cycles:
-352785
+351621
 kem_keygen average cycles:
-12192381
+11763624
 kem_encap average cycles:
-57009
+56611
 kem_decap average cycles:
-230135
+229732
 sign_keygen average cycles:
-12273693
+12177889
 Gandalf_sign average cycles:
-928048
+925096
 Gandalf_verify average cycles:
-101234
+100266
 ```
 
 #### `mlkem-512` + `mitaka`
 
 Sample output:
 ```
+Post-quantum AKEM public key bytes: 1696
+Post-quantum AKEM secret key bytes: 3680
+Post-quantum AKEM ciphertext bytes: 2044
 loaded db: a14 (Apple A14/M1)
 number of fixed counters: 2
 number of configurable counters: 8
 pq_akem_keygen average cycles:
-13482697
+13544901
 pq_akem_encap average cycles:
-1332821
+1346046
 pq_akem_decap average cycles:
-232536
+235515
 kem_keygen average cycles:
-72894
+74437
 kem_encap average cycles:
-82562
+83871
 kem_decap average cycles:
-103366
+105130
 sign_keygen average cycles:
-13378206
+13460974
 Gandalf_sign average cycles:
-1159259
+1168235
 Gandalf_verify average cycles:
-109688
+110579
 ```
 
 #### `mlkem-512` + `falcon-512`
 
 Sample output:
 ```
+Post-quantum AKEM public key bytes: 1696
+Post-quantum AKEM secret key bytes: 3680
+Post-quantum AKEM ciphertext bytes: 2044
 loaded db: a14 (Apple A14/M1)
 number of fixed counters: 2
 number of configurable counters: 8
@@ -198,124 +213,136 @@ Type `./speed_h_akem`.
 
 Sample output:
 ```
+Hybrid AKEM public key bytes: 1449
+Hybrid AKEM secret key bytes: 5033
+Hybrid AKEM ciphertext bytes: 1781
 loaded db: a14 (Apple A14/M1)
 number of fixed counters: 2
 number of configurable counters: 8
 h_akem_keygen average cycles:
-25761718
+25470899
 h_akem_encap average cycles:
-1994683
+1986834
 h_akem_decap average cycles:
-792853
+800436
 nike_keygen average cycles:
-227623
+227480
 nike_sdk average cycles:
-226948
+228262
 kem_keygen average cycles:
-12281158
+12025343
 kem_encap average cycles:
-57655
+56816
 kem_decap average cycles:
-230753
+229760
 sign_keygen average cycles:
-13434740
+13477674
 Gandalf_sign average cycles:
-1144247
+1136711
 Gandalf_verify average cycles:
-84319
+84190
 ```
 
 #### `bat-257` + `falcon-512`
 
 Sample output:
 ```
+Hybrid AKEM public key bytes: 1449
+Hybrid AKEM secret key bytes: 5033
+Hybrid AKEM ciphertext bytes: 1781
 loaded db: a14 (Apple A14/M1)
 number of fixed counters: 2
 number of configurable counters: 8
 h_akem_keygen average cycles:
-24132786
+24556113
 h_akem_encap average cycles:
-1755577
+1747890
 h_akem_decap average cycles:
-799076
+798843
 nike_keygen average cycles:
-227143
+226467
 nike_sdk average cycles:
-227968
+226700
 kem_keygen average cycles:
-12113522
+11770465
 kem_encap average cycles:
-57433
+56926
 kem_decap average cycles:
-232074
+230062
 sign_keygen average cycles:
-12297471
+12213002
 Gandalf_sign average cycles:
-916199
+906337
 Gandalf_verify average cycles:
-84785
+84256
 ```
 
 #### `mlkem-512` + `mitaka`
 
 Sample output:
 ```
+Hybrid AKEM public key bytes: 1728
+Hybrid AKEM secret key bytes: 3712
+Hybrid AKEM ciphertext bytes: 2076
 loaded db: a14 (Apple A14/M1)
 number of fixed counters: 2
 number of configurable counters: 8
 h_akem_keygen average cycles:
-13783450
+13804389
 h_akem_encap average cycles:
-2005094
+2033621
 h_akem_decap average cycles:
-671695
+674641
 nike_keygen average cycles:
-226398
+226747
 nike_sdk average cycles:
-228291
+229655
 kem_keygen average cycles:
-73798
+73514
 kem_encap average cycles:
-83341
+83346
 kem_decap average cycles:
-103906
+104510
 sign_keygen average cycles:
-13353077
+13351576
 Gandalf_sign average cycles:
-1137731
+1152319
 Gandalf_verify average cycles:
-91000
+92063
 ```
 
 #### `mlkem-512` + `falcon-512`
 
 Sample output:
 ```
+Hybrid AKEM public key bytes: 1728
+Hybrid AKEM secret key bytes: 3712
+Hybrid AKEM ciphertext bytes: 2076
 loaded db: a14 (Apple A14/M1)
 number of fixed counters: 2
 number of configurable counters: 8
 h_akem_keygen average cycles:
-12644717
+12645496
 h_akem_encap average cycles:
-1792949
+1797365
 h_akem_decap average cycles:
-678492
+675321
 nike_keygen average cycles:
-227720
+227139
 nike_sdk average cycles:
-227161
+228670
 kem_keygen average cycles:
-75330
+74296
 kem_encap average cycles:
-84935
+83721
 kem_decap average cycles:
-105796
+105104
 sign_keygen average cycles:
-12183916
+12188683
 Gandalf_sign average cycles:
-921453
+922625
 Gandalf_verify average cycles:
-91992
+91986
 ```
 
 

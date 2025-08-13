@@ -32,6 +32,10 @@ int main(){
     uint8_t kk[48];
     uint8_t m[NTESTS][MLEN];
 
+    printf("Post-quantum AKEM public key bytes: %4zu\n", sizeof(pq_akem_pk));
+    printf("Post-quantum AKEM secret key bytes: %4zu\n", sizeof(pq_akem_sk));
+    printf("Post-quantum AKEM ciphertext bytes: %4zu\n", sizeof(pq_akem_ct));
+
     for(size_t i = 0; i < 512; i++){
       a.coeffs[i] = rand() % 12289;
       a.coeffs[i] -= 6144;

@@ -31,6 +31,10 @@ int main(void){
     uint8_t kk[32];
     uint8_t m[NTESTS][MLEN];
 
+    printf("Hybrid AKEM public key bytes: %4zu\n", sizeof(h_akem_pk));
+    printf("Hybrid AKEM secret key bytes: %4zu\n", sizeof(h_akem_sk));
+    printf("Hybrid AKEM ciphertext bytes: %4zu\n", sizeof(h_akem_ct));
+
     // initialize randombyte seed
     init_prng();
 
