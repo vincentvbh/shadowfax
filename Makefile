@@ -14,15 +14,11 @@ DH_PATH     = dh
 
 RSIG_F_PATH = Gandalf_Falcon
 RSIG_M_PATH = Gandalf_Mitaka
-
-RSIG_PATH   = $(RSIG_F_PATH)
-# RSIG_PATH   = $(RSIG_M_PATH)
+RSIG_PATH  ?= $(RSIG_F_PATH)
 
 BAT_PATH    = BAT
 MLKEM_PATH  = mlkem
-KEM_PATH    = $(MLKEM_PATH)
-# KEM_PATH    = $(BAT_PATH)
-
+KEM_PATH   ?= $(MLKEM_PATH)
 
 CFLAGS     += -I$(RAND_PATH) -I$(HASH_PATH) -I$(SYMM_PATH) -I$(NGEN_PATH) -I$(KEM_PATH) -I$(RSIG_PATH) -I$(DH_PATH)
 
