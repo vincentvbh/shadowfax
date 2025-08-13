@@ -1,0 +1,29 @@
+Hybrid AKEM public key bytes: 1449
+Hybrid AKEM secret key bytes: 5033
+Hybrid AKEM ciphertext bytes: 1781
+loaded db: a14 (Apple A14/M1)
+number of fixed counters: 2
+number of configurable counters: 8
+h_akem_keygen average cycles:
+25696172
+h_akem_encap average cycles:
+1970782
+h_akem_decap average cycles:
+791029
+nike_keygen average cycles:
+225502
+nike_sdk average cycles:
+226342
+kem_keygen average cycles:
+12070407
+kem_encap average cycles:
+57068
+kem_decap average cycles:
+229594
+sign_keygen average cycles:
+13350923
+MLEN = 994
+Gandalf_sign average cycles:
+1130282
+Gandalf_verify average cycles:
+83875

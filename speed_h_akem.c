@@ -97,6 +97,7 @@ int main(void){
     sign_keygen(&sender_sk.ssk, &sender_pk.spk);
     internal_rsig_pk.hs[0] = sender_pk.spk;
     internal_rsig_pk.hs[0] = receiver_pk.spk;
+    printf("MLEN = %d\n", MLEN);
     WRAP_FUNC("Gandalf_sign",
               cycles, time0, time1,
               Gandalf_sign(&internal_signature, m[i], MLEN, &internal_rsig_pk, &sender_sk.ssk, 0));

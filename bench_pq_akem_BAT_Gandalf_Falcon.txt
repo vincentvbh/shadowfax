@@ -1,0 +1,25 @@
+Post-quantum AKEM public key bytes: 1417
+Post-quantum AKEM secret key bytes: 5001
+Post-quantum AKEM ciphertext bytes: 1749
+loaded db: a14 (Apple A14/M1)
+number of fixed counters: 2
+number of configurable counters: 8
+pq_akem_keygen average cycles:
+24455468
+pq_akem_encap average cycles:
+1066210
+pq_akem_decap average cycles:
+349873
+kem_keygen average cycles:
+11735971
+kem_encap average cycles:
+58050
+kem_decap average cycles:
+233013
+sign_keygen average cycles:
+12222935
+MLEN = 2411
+Gandalf_sign average cycles:
+933070
+Gandalf_verify average cycles:
+100928
