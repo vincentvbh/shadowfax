@@ -1,0 +1,26 @@
+#ifndef RSIG_PARAMS_H
+#define RSIG_PARAMS_H
+
+#include "rsig_api.h"
+
+#define N 512
+#define LOG_N 9
+#define Q 12289
+// #define RING_K 2
+#define ALPHA 1.17
+#define GANDALF_BOUND_SQUARE_FLOOR (62798289)
+
+// #define SALT_BYTES 24
+#define ZQPOLY_BYTES (2 * N)
+#define FPOLY_BYTES (8 * N)
+
+// #define SIGN_PUBLICKEY_BYTES (ZQPOLY_BYTES)
+// #define SIGN_SECRETKEY_BYTES (4 * N)
+// #define COMPRESSED_SIGN_SIGNATURE_BYTES (626)
+// #define SIGN_SIGNATURE_BYTES (COMPRESSED_SIGN_SIGNATURE_BYTES + SALT_BYTES)
+
+// #define rsig_PUBLICKEY_BYTES (RING_K * SIGN_PUBLICKEY_BYTES)
+// #define rsig_SIGNATURE_BYTES (RING_K * COMPRESSED_SIGN_SIGNATURE_BYTES + SALT_BYTES)
+
+#endif
+

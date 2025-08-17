@@ -5,21 +5,21 @@ loaded db: a14 (Apple A14/M1)
 number of fixed counters: 2
 number of configurable counters: 8
 pq_akem_keygen average cycles:
-25508160
+25226886
 pq_akem_encap average cycles:
-1293519
+1288701
 pq_akem_decap average cycles:
-346276
+350031
 kem_keygen average cycles:
-11827666
+11846127
 kem_encap average cycles:
-57269
+57480
 kem_decap average cycles:
-229469
+229587
 sign_keygen average cycles:
-13403902
+13346884
 MLEN = 2411
 Gandalf_sign average cycles:
-1157661
+1148677
 Gandalf_verify average cycles:
-101027
+99934

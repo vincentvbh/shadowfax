@@ -5,25 +5,25 @@ loaded db: a14 (Apple A14/M1)
 number of fixed counters: 2
 number of configurable counters: 8
 h_akem_keygen average cycles:
-13665814
+13772442
 h_akem_encap average cycles:
-2033615
+2033936
 h_akem_decap average cycles:
-670308
+674482
 nike_keygen average cycles:
-225366
+226972
 nike_sdk average cycles:
-226444
+229547
 kem_keygen average cycles:
-73642
+74543
 kem_encap average cycles:
-83382
+83691
 kem_decap average cycles:
-104353
+104508
 sign_keygen average cycles:
-13259121
+13349781
 MLEN = 1568
 Gandalf_sign average cycles:
-1166456
+1180403
 Gandalf_verify average cycles:
-90942
+91746

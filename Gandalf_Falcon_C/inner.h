@@ -25,25 +25,15 @@
  */
 
 /* Define FNDSA_AVX2 to 1 in order to add AVX2 support, 0 otherwise. */
-#ifndef FNDSA_AVX2
 #if defined __x86_64__ || defined _M_X64 || defined __i386__ || defined _M_IX86
 #define FNDSA_AVX2   1
 #else
 #define FNDSA_AVX2   0
 #endif
-#endif
 
 /* TARGET_AVX2 is applied to a function definition and allows use of AVX2
    intrinsics in that function. */
-#if FNDSA_AVX2
-#if defined __GNUC__ || defined __clang__
-#define TARGET_AVX2    __attribute__((target("avx2,lzcnt")))
-#else
 #define TARGET_AVX2
-#endif
-#else
-#define TARGET_AVX2
-#endif
 
 /* ALIGN32 is applied to a declarator and will try to make the declared
    object aligned at a 32-byte boundary in memory. */
@@ -60,7 +50,6 @@
    ABI, so FNDSA_SSE2 will always be set. On 32-bit x86, whether SSE2
    is enabled or not depends on the compiler (recent MSVC versions set
    it by default, GCC and Clang on Linux do not). */
-#ifndef FNDSA_SSE2
 #if ((defined __GNUC__ || defined __clang__) && defined __SSE2__) \
 	|| (defined _MSC_VER && defined _M_X64) \
 	|| (defined _MSC_VER && defined _M_IX86_FP && _M_IX86_FP >= 2)
@@ -68,32 +57,16 @@
 #else
 #define FNDSA_SSE2   0
 #endif
-#endif
 
 /* TARGET_SSE2 is applied to a function definition and allows use of SSE2
    intrinsics in that function. */
-#if FNDSA_SSE2
-#if defined __GNUC__ || defined __clang__
-#define TARGET_SSE2    __attribute__((target("sse2")))
-#else
 #define TARGET_SSE2
-#endif
-#else
-#define TARGET_SSE2
-#endif
 
-#if FNDSA_AVX2 || FNDSA_SSE2
-#include <immintrin.h>
-#if defined __GNUC__ || defined __clang__
-#include <x86intrin.h>
-#endif
-#endif
 
 /* FNDSA_NEON is set to 1 if NEON is supported by the hardware, including
    vectors of 64-bit (double precision) floating-point values (aarch64 only).
    This test is static (no runtime detection). Since NEON is normally part
    of the aarch64 ABI, this should always be set on this architecture. */
-#ifndef FNDSA_NEON
 #if defined __aarch64__ \
 	&& ((defined __ARM_NEON_FP && ((__ARM_NEON_FP & 0x0C) != 0)) \
 	 || (!defined __ARM_NEON_FP && ((__ARM_FP & 0x0C) != 0)))
@@ -101,15 +74,11 @@
 #else
 #define FNDSA_NEON   0
 #endif
-#endif
 
 /* TARGET_NEON is applied to a function definition and allows use of NEON
    intrinsics in that function. */
 #define TARGET_NEON
 
-#if FNDSA_NEON
-#include <arm_neon.h>
-#endif
 
 /* If FNDSA_NEON_SHA3 is non-zero, then NEON opcodes will be used to
    make two SHAKE256 parallel evaluations during keygen and signing.
@@ -123,13 +92,11 @@
    with the D (64-bit floating-point) extension; this is the case of most
    "general purpose" RISC-V hardware (which is "RV64GC", with "G" being
    a shorthand for I, M, A, F and D). */
-#ifndef FNDSA_RV64D
 #if defined __riscv && defined __riscv_xlen && __riscv_xlen >= 64 \
 	&& defined __riscv_d && defined __riscv_flen && __riscv_flen >= 64
 #define FNDSA_RV64D   1
 #else
 #define FNDSA_RV64D   0
-#endif
 #endif
 
 /* If FNDSA_DIV_EMU is 1, then floating-point division will use the
@@ -396,9 +363,6 @@ typedef struct {
 	uint64_t state[100];
 	uint8_t buf[4 * 136];
 	unsigned ptr;
-#if FNDSA_AVX2
-	int use_avx2;
-#endif
 } shake256x4_context;
 
 /* Initialize a SHAKE256x4 context from a given seed.
@@ -663,37 +627,6 @@ int mqpoly_sqnorm_is_acceptable(unsigned logn, uint32_t norm);
 extern const uint16_t mq_GM[];
 extern const uint16_t mq_iGM[];
 
-#if FNDSA_AVX2
-#define avx2_mqpoly_small_to_int          fndsa_avx2_mqpoly_small_to_int
-#define avx2_mqpoly_signed_to_int         fndsa_avx2_mqpoly_signed_to_int
-#define avx2_mqpoly_int_to_small          fndsa_avx2_mqpoly_int_to_small
-#define avx2_mqpoly_ext_to_int            fndsa_avx2_mqpoly_ext_to_int
-#define avx2_mqpoly_int_to_ext            fndsa_avx2_mqpoly_int_to_ext
-#define avx2_mqpoly_int_to_ntt            fndsa_avx2_mqpoly_int_to_ntt
-#define avx2_mqpoly_ntt_to_int            fndsa_avx2_mqpoly_ntt_to_int
-#define avx2_mqpoly_mul_ntt               fndsa_avx2_mqpoly_mul_ntt
-#define avx2_mqpoly_div_ntt               fndsa_avx2_mqpoly_div_ntt
-#define avx2_mqpoly_sub                   fndsa_avx2_mqpoly_sub
-#define avx2_mqpoly_is_invertible         fndsa_avx2_mqpoly_is_invertible
-#define avx2_mqpoly_div_small             fndsa_avx2_mqpoly_div_small
-#define avx2_mqpoly_sqnorm_ext            fndsa_avx2_mqpoly_sqnorm_ext
-#define avx2_mqpoly_sqnorm_signed         fndsa_avx2_mqpoly_sqnorm_signed
-void avx2_mqpoly_small_to_int(unsigned logn, const int8_t *f, uint16_t *d);
-void avx2_mqpoly_signed_to_int(unsigned logn, uint16_t *d);
-int avx2_mqpoly_int_to_small(unsigned logn, const uint16_t *d, int8_t *f);
-void avx2_mqpoly_ext_to_int(unsigned logn, uint16_t *d);
-void avx2_mqpoly_int_to_ext(unsigned logn, uint16_t *d);
-void avx2_mqpoly_int_to_ntt(unsigned logn, uint16_t *d);
-void avx2_mqpoly_ntt_to_int(unsigned logn, uint16_t *d);
-void avx2_mqpoly_mul_ntt(unsigned logn, uint16_t *a, const uint16_t *b);
-int avx2_mqpoly_div_ntt(unsigned logn, uint16_t *a, const uint16_t *b);
-void avx2_mqpoly_sub(unsigned logn, uint16_t *a, const uint16_t *b);
-int avx2_mqpoly_is_invertible(unsigned logn, const int8_t *f, uint16_t *tmp);
-void avx2_mqpoly_div_small(unsigned logn, const int8_t *f, const int8_t *g,
-	uint16_t *h, uint16_t *tmp);
-uint32_t avx2_mqpoly_sqnorm_ext(unsigned logn, const uint16_t *a);
-uint32_t avx2_mqpoly_sqnorm_signed(unsigned logn, const uint16_t *a);
-#endif
 
 /* ==================================================================== */
 /*
@@ -715,11 +648,6 @@ void hash_to_point(unsigned logn,
 	const char *hash_id, const void *hv, size_t hv_len,
 	uint16_t *c);
 
-#if FNDSA_AVX2
-#define has_avx2   fndsa_has_avx2
-/* Check for AVX2 support by the current CPU. */
-int has_avx2(void);
-#endif
 
 /* Expand the top bit of a 32-bit word into a full 32-bit mask (i.e. return
    0xFFFFFFFF if x >= 0x80000000, or 0x00000000 otherwise). */

@@ -19,5 +19,7 @@ rm -f bench*
 
 bench BAT Gandalf_Mitaka
 bench BAT Gandalf_Falcon
+bench BAT Gandalf_Falcon_C
 bench mlkem Gandalf_Mitaka
 bench mlkem Gandalf_Falcon
+bench mlkem Gandalf_Falcon_C
