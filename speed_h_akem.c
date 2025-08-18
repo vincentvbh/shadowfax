@@ -45,49 +45,71 @@ int main(void){
 // akem operations
 
     WRAP_FUNC("h_akem_keygen",
+              "\\newcommand\\" KEM_INSTANCE RSIG_INSTANCE
+              "HybridAKEMKeyGen{",
               cycles, time0, time1,
-              h_akem_keygen(&sender_sk, &sender_pk));
+              h_akem_keygen(&sender_sk, &sender_pk),
+              "}");
 
     WRAP_FUNC("h_akem_encap",
+              "\\newcommand\\" KEM_INSTANCE RSIG_INSTANCE
+              "HybridAKEMEnc{",
               cycles, time0, time1,
-              h_akem_encap(sender_secret, &ct, &sender_sk, &sender_pk, &receiver_pk));
+              h_akem_encap(sender_secret, &ct, &sender_sk, &sender_pk, &receiver_pk),
+              "}");
 
     WRAP_FUNC("h_akem_decap",
+              "\\newcommand\\" KEM_INSTANCE RSIG_INSTANCE
+              "HybridAKEMDec{",
               cycles, time0, time1,
-              h_akem_decap(receiver_secret, &ct, &receiver_sk, &receiver_pk, &sender_pk));
+              h_akem_decap(receiver_secret, &ct, &receiver_sk, &receiver_pk, &sender_pk),
+              "}");
 
 // ========
 // nike operations
 
     WRAP_FUNC("nike_keygen",
+              "",
               cycles, time0, time1,
-              nike_keygen(&sender_sk.nsk, &sender_pk.npk));
+              nike_keygen(&sender_sk.nsk, &sender_pk.npk),
+              "");
 
     WRAP_FUNC("nike_sdk",
+              "",
               cycles, time0, time1,
-              nike_sdk(&s, &sender_sk.nsk, &receiver_pk.npk));
+              nike_sdk(&s, &sender_sk.nsk, &receiver_pk.npk),
+              "");
 
 // ========
 // kem operations
 
     WRAP_FUNC("kem_keygen",
+              "",
               cycles, time0, time1,
-              kem_keygen(&sender_sk.ksk, &sender_pk.kpk));
+              kem_keygen(&sender_sk.ksk, &sender_pk.kpk),
+              "");
 
     WRAP_FUNC("kem_encap",
+              "",
               cycles, time0, time1,
-              kem_encap(kk, 64, &ct.ct, &receiver_pk.kpk));
+              kem_encap(kk, 64, &ct.ct, &receiver_pk.kpk),
+              "");
 
     WRAP_FUNC("kem_decap",
+              "",
               cycles, time0, time1,
-              kem_decap(kk, 64, &ct.ct, &receiver_sk.ksk));
+              kem_decap(kk, 64, &ct.ct, &receiver_sk.ksk),
+              "");
 
 // ========
 // ring signature operations
 
     WRAP_FUNC("sign_keygen",
+              "\\newcommand\\" RSIG_INSTANCE
+              "GandalfRSigKeyGen{",
               cycles, time0, time1,
-              sign_keygen(&sender_sk.ssk, &sender_pk.spk));
+              sign_keygen(&sender_sk.ssk, &sender_pk.spk),
+              "}");
 
     for(size_t i = 0; i < NTESTS; i++){
         randombytes(m[i], MLEN);
@@ -99,12 +121,18 @@ int main(void){
     internal_rsig_pk.hs[0] = receiver_pk.spk;
     printf("MLEN = %d\n", MLEN);
     WRAP_FUNC("Gandalf_sign",
+              "\\newcommand\\" RSIG_INSTANCE
+              "GandalfRSigSig{",
               cycles, time0, time1,
-              Gandalf_sign(&internal_signature, m[i], MLEN, &internal_rsig_pk, &sender_sk.ssk, 0));
+              Gandalf_sign(&internal_signature, m[i], MLEN, &internal_rsig_pk, &sender_sk.ssk, 0),
+              "}");
 
     WRAP_FUNC("Gandalf_verify",
+              "\\newcommand\\" RSIG_INSTANCE
+              "GandalfRSigVrfy{",
               cycles, time0, time1,
-              Gandalf_verify(m[i], MLEN, &internal_signature, &internal_rsig_pk));
+              Gandalf_verify(m[i], MLEN, &internal_signature, &internal_rsig_pk),
+              "}");
 
     return 0;
 

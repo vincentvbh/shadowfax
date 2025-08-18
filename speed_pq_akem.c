@@ -55,48 +55,69 @@ int main(){
 // akem operations
 
     WRAP_FUNC("pq_akem_keygen",
+              "\\newcommand\\" KEM_INSTANCE RSIG_INSTANCE
+              "PQAKEMKeyGen{",
               cycles, time0, time1,
-              pq_akem_keygen(&sender_sk, &sender_pk));
+              pq_akem_keygen(&sender_sk, &sender_pk),
+              "}");
 
-    WRAP_FUNC("pq_akem_encap",
+    WRAP_FUNC("//pq_akem_encap",
+              "\\newcommand\\" KEM_INSTANCE RSIG_INSTANCE
+              "PQAKEMEnc{",
               cycles, time0, time1,
-              pq_akem_encap(sender_secret, &ct, &sender_sk, &sender_pk, &receiver_pk));
+              pq_akem_encap(sender_secret, &ct, &sender_sk, &sender_pk, &receiver_pk),
+              "}");
 
     WRAP_FUNC("pq_akem_decap",
+              "\\newcommand\\" KEM_INSTANCE RSIG_INSTANCE
+              "PQAKEMDec{",
               cycles, time0, time1,
-              pq_akem_decap(receiver_secret, &ct, &receiver_sk, &receiver_pk, &sender_pk));
+              pq_akem_decap(receiver_secret, &ct, &receiver_sk, &receiver_pk, &sender_pk),
+              "}");
 
 // ========
 // kem operations
 
     WRAP_FUNC("kem_keygen",
+              "",
               cycles, time0, time1,
-              kem_keygen(&sender_sk.ksk, &sender_pk.kpk));
+              kem_keygen(&sender_sk.ksk, &sender_pk.kpk),
+              "");
 
     WRAP_FUNC("kem_encap",
+              "",
               cycles, time0, time1,
-              kem_encap(kk, 48, &ct.ct, &receiver_pk.kpk));
+              kem_encap(kk, 48, &ct.ct, &receiver_pk.kpk),
+              "");
 
     WRAP_FUNC("kem_decap",
+              "",
               cycles, time0, time1,
-              kem_decap(kk, 48, &ct.ct, &receiver_sk.ksk));
+              kem_decap(kk, 48, &ct.ct, &receiver_sk.ksk),
+              "");
 
 // ========
 // ring signature operations
 
     WRAP_FUNC("sign_keygen",
+              "",
               cycles, time0, time1,
-              sign_keygen(&sender_sk.ssk, &sender_pk.spk));
+              sign_keygen(&sender_sk.ssk, &sender_pk.spk),
+              "");
 
     sign_keygen(&sender_sk.ssk, &sender_pk.spk);
     printf("MLEN = %d\n", MLEN);
     WRAP_FUNC("Gandalf_sign",
+              "",
               cycles, time0, time1,
-              Gandalf_sign(&internal_signature, m[i], MLEN, &internal_rsig_pk, &sender_sk.ssk, 0));
+              Gandalf_sign(&internal_signature, m[i], MLEN, &internal_rsig_pk, &sender_sk.ssk, 0),
+              "");
 
     WRAP_FUNC("Gandalf_verify",
+              "",
               cycles, time0, time1,
-              Gandalf_verify(m[i], MLEN, &internal_signature, &internal_rsig_pk));
+              Gandalf_verify(m[i], MLEN, &internal_signature, &internal_rsig_pk),
+              "");
 
     return 0;
 

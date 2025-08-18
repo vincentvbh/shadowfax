@@ -12,6 +12,8 @@ speed_dh_akem
 speed_pq_akem
 speed_h_akem
 
+get_latex
+
 **/*.sage.py
 
 # Prerequisites

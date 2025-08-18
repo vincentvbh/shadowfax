@@ -6,6 +6,9 @@
 void init_counter(void);
 uint64_t get_cycle(void);
 
+#define TO_THOUSANDS(a) ((a + 500) / 1000)
+#define WRAP_WITH_UNIT(a) TO_THOUSANDS(a)
+
 #ifdef __APPLE__
 #define CYCLE_TYPE "%lld"
 #else
@@ -17,9 +20,9 @@ uint64_t get_cycle(void);
 #define LOOP_INIT(__clock0, __clock1) { \
     __clock0 = get_cycle(); \
 }
-#define LOOP_TAIL(__f_string, records, __clock0, __clock1) { \
+#define LOOP_TAIL(__f_string_begin, __f_string_middle, records, __clock0, __clock1, __f_string_end) { \
     __clock1 = get_cycle(); \
-    printf(__f_string " average cycles:\n" CYCLE_TYPE "\n", (__clock1 - __clock0) / NTESTS); \
+    printf(__f_string_begin " average cycles:\n" __f_string_middle CYCLE_TYPE __f_string_end "\n", WRAP_WITH_UNIT((__clock1 - __clock0) / NTESTS)); \
 }
 #define BODY_INIT(__clock0, __clock1) {}
 #define BODY_TAIL(records, __clock0, __clock1) {}
@@ -33,9 +36,9 @@ static int cmp_uint64(const void *a, const void *b){
 }
 
 #define LOOP_INIT(__clock0, __clock1) {}
-#define LOOP_TAIL(__f_string, records, __clock0, __clock1) { \
+#define LOOP_TAIL(__f_string_begin, __f_string_middle, records, __clock0, __clock1, __f_string_end) { \
     qsort(records, sizeof(uint64_t), NTESTS, cmp_uint64); \
-    printf(__f_string " median cycles:\n" CYCLE_TYPE "\n", records[NTESTS >> 1]); \
+    printf(__f_string_begin " median cycles:\n" __f_string_middle CYCLE_TYPE __f_string_end "\n", WRAP_WITH_UNIT(records[NTESTS >> 1])); \
 }
 #define BODY_INIT(__clock0, __clock1) { \
     __clock0 = get_cycle(); \
@@ -49,14 +52,14 @@ static int cmp_uint64(const void *a, const void *b){
 
 #endif
 
-#define WRAP_FUNC(__f_string, records, __clock0, __clock1, func){ \
+#define WRAP_FUNC(__f_string_begin, __f_string_middle, records, __clock0, __clock1, func, __f_string_end){ \
     LOOP_INIT(__clock0, __clock1); \
     for(size_t i = 0; i < NTESTS; i++){ \
         BODY_INIT(__clock0, __clock1); \
         func; \
         BODY_TAIL(records, __clock0, __clock1); \
     } \
-    LOOP_TAIL(__f_string, records, __clock0, __clock1); \
+    LOOP_TAIL(__f_string_begin, __f_string_middle, records, __clock0, __clock1, __f_string_end); \
 }
 
 #endif

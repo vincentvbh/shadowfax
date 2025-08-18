@@ -1,25 +1,30 @@
 #!/bin/bash
 
-password_path=~/password
+bench_file=bench.txt
+bench_latex_file=bench_latex.tex
+
+rm -f $bench_file
 
 bench() {
 make clean
 make -j12 KEM_PATH=$1 RSIG_PATH=$2
 
 if [[ "$OSTYPE" == "darwin"* ]]; then
-sudo -S <$password_path ./speed_pq_akem > bench_pq_akem_$1_$2.txt
-sudo -S <$password_path ./speed_h_akem > bench_h_akem_$1_$2.txt
+sudo ./speed_pq_akem >> $bench_file
+sudo ./speed_h_akem >> $bench_file
 else
-./speed_pq_akem > bench_pq_akem_$1_$2.txt
-./speed_h_akem > bench_h_akem_$1_$2.txt
+./speed_pq_akem >> $bench_file
+./speed_h_akem >> $bench_file
 fi
 }
 
-rm -f bench*
+bench BAT GandalfMitaka
+bench BAT GandalfFalcon
+bench BAT GandalfFalconC
+bench mlkem GandalfMitaka
+bench mlkem GandalfFalcon
+bench mlkem GandalfFalconC
 
-bench BAT Gandalf_Mitaka
-bench BAT Gandalf_Falcon
-bench BAT Gandalf_Falcon_C
-bench mlkem Gandalf_Mitaka
-bench mlkem Gandalf_Falcon
-bench mlkem Gandalf_Falcon_C
+gcc get_latex.c -o get_latex; ./get_latex $bench_file $bench_latex_file
+
+

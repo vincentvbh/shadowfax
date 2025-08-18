@@ -12,13 +12,16 @@ NGEN_PATH   = ntru_gen
 
 DH_PATH     = dh
 
-RSIG_F_PATH = Gandalf_Falcon
-RSIG_M_PATH = Gandalf_Mitaka
+RSIG_F_PATH = GandalfFalcon
+RSIG_F_PATH = GandalfFalconC
+RSIG_M_PATH = GandalfMitaka
 RSIG_PATH  ?= $(RSIG_F_PATH)
+CFLAGS     += -DRSIG_INSTANCE=\"$(RSIG_PATH)\"
 
 BAT_PATH    = BAT
 MLKEM_PATH  = mlkem
 KEM_PATH   ?= $(MLKEM_PATH)
+CFLAGS     += -DKEM_INSTANCE=\"$(KEM_PATH)\"
 
 CFLAGS     += -I$(RAND_PATH) -I$(HASH_PATH) -I$(SYMM_PATH) -I$(NGEN_PATH) -I$(KEM_PATH) -I$(RSIG_PATH) -I$(DH_PATH)
 

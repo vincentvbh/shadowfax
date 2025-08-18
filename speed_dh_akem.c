@@ -42,23 +42,35 @@ int main(void){
     nike_keygen(&sk2, &pk2);
 
     WRAP_FUNC("nike_akem_encap",
+              "\\newcommand\\"
+              "DHAKEMEnc{",
               cycles, time0, time1,
-              nike_akem_encap(nike_akem_secret1, &ct, &sk1, &pk1, &pk2));
+              nike_akem_encap(nike_akem_secret1, &ct, &sk1, &pk1, &pk2),
+              "}");
 
     WRAP_FUNC("nike_akem_decap",
+              "\\newcommand\\"
+              "DHAKEMDec{",
               cycles, time0, time1,
-              nike_akem_decap(nike_akem_secret2, &ct, &sk2, &pk2, &pk1));
+              nike_akem_decap(nike_akem_secret2, &ct, &sk2, &pk2, &pk1),
+              "}");
 
 // ========
 // NIKE
 
     WRAP_FUNC("nike_keygen",
+              "\\newcommand\\"
+              "DHAKEMKeyGen{",
               cycles, time0, time1,
-              nike_keygen(&sk1, &pk1));
+              nike_keygen(&sk1, &pk1),
+              "}");
 
     WRAP_FUNC("nike_sdk",
+              "\\newcommand\\"
+              "DHAKEMSDK{",
               cycles, time0, time1,
-              nike_sdk(&s1, &sk2, &pk1));
+              nike_sdk(&s1, &sk2, &pk1),
+              "}");
 
 }
 
