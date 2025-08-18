@@ -31,6 +31,7 @@ static size_t sprintf_format_000(char *des, uint32_t perf) {
         local_buff_ptr += sprintf(local_buff_ptr, "%d\\;", local_buff[i]);
     }
     local_buff_ptr += sprintf(local_buff_ptr, "%d", local_buff[0]);
+    *local_buff_ptr = '\0';
     return local_buff_ptr - des;
 }
 
@@ -66,12 +67,7 @@ int main(int argc, char **argv) {
         if(line[0] != '\\')
             continue;
         size_t i;
-        for(i = 0; i < len; i++) {
-
-            if(isdigit(line[i]))
-                break;
-
-        }
+        for(i = 0; (i < len) && (isdigit(line[i]) == 0); i++) {}
         if(i == len)
             continue;
 
