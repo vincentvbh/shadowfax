@@ -1,13 +1,15 @@
 
 # Shadowfax
 
-## Requirements for compilation
-- A C compiler
+## Software requirements
+- `cc`
+- `makefile`
+- `bash`
 
 ## Our benchmark environment
 - Apple M1 Pro
 - Sonoma 14.6.1
-- `gcc (Homebrew GCC 13.2.0) 13.2.0`
+- `gcc (Homebrew GCC 13.3.0) 13.3.0`
 
 ## Additional compilation tests
 - Apple M1 Pro, Sonoma 14.6.1, `gcc (Homebrew GCC 13.3.0) 13.3.0`
@@ -39,12 +41,6 @@ Type `./test_dh_akem`. Sample output:
 ### Benchmark
 Type `./speed_dh_akem`.
 
-Benchmarks can be found in the following files:
-- `bench_pq_akem_BAT_Gandalf_Falcon.txt`
-- `bench_pq_akem_BAT_Gandalf_Mitaka.txt`
-- `bench_pq_akem_mlkem_Gandalf_Falcon.txt`
-- `bench_pq_akem_mlkem_Gandalf_Mitaka.txt`
-
 ## PQ-AKEM
 
 ### Test for correctness
@@ -61,7 +57,6 @@ Type `./test_pq_akem`. Sample output:
 
 ### Benchmark
 Type `./speed_pq_akem`.
-
 
 ## Hybrid AKEM
 
@@ -80,9 +75,8 @@ Type `./test_h_akem`. Sample output:
 ### Benchmark
 Type `./speed_h_akem`.
 
-Benchmarks can be found in the following files:
-- `bench_h_akem_BAT_Gandalf_Falcon.txt`
-- `bench_h_akem_BAT_Gandalf_Mitaka.txt`
-- `bench_h_akem_mlkem_Gandalf_Falcon.txt`
-- `bench_h_akem_mlkem_Gandalf_Mitaka.txt`
+## Scripts
+
+Running `./make_bench.sh` will automatically benchmark the implementations.
+Thousands of cycles are written to the file `bench.txt` and converted into latex commands in `bench_latex.tex`.
 
