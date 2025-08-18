@@ -55,21 +55,21 @@ int main(){
 // akem operations
 
     WRAP_FUNC("pq_akem_keygen",
-              "\\newcommand\\" KEM_INSTANCE RSIG_INSTANCE
+              "\\providecommand\\" KEM_INSTANCE RSIG_INSTANCE
               "PQAKEMKeyGen{",
               cycles, time0, time1,
               pq_akem_keygen(&sender_sk, &sender_pk),
               "}");
 
     WRAP_FUNC("//pq_akem_encap",
-              "\\newcommand\\" KEM_INSTANCE RSIG_INSTANCE
+              "\\providecommand\\" KEM_INSTANCE RSIG_INSTANCE
               "PQAKEMEnc{",
               cycles, time0, time1,
               pq_akem_encap(sender_secret, &ct, &sender_sk, &sender_pk, &receiver_pk),
               "}");
 
     WRAP_FUNC("pq_akem_decap",
-              "\\newcommand\\" KEM_INSTANCE RSIG_INSTANCE
+              "\\providecommand\\" KEM_INSTANCE RSIG_INSTANCE
               "PQAKEMDec{",
               cycles, time0, time1,
               pq_akem_decap(receiver_secret, &ct, &receiver_sk, &receiver_pk, &sender_pk),
