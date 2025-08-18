@@ -25,6 +25,6 @@ bench mlkem GandalfMitaka
 bench mlkem GandalfFalcon
 bench mlkem GandalfFalconC
 
-gcc get_latex.c -o get_latex; ./get_latex $bench_file $bench_latex_file
+cc get_latex.c -o get_latex; ./get_latex $bench_file $bench_latex_file
 
 
