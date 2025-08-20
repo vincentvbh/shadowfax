@@ -13,7 +13,7 @@ NGEN_PATH   = ntru_gen
 DH_PATH     = dh
 
 RSIG_F_PATH = GandalfFalcon
-RSIG_F_PATH = GandalfFalconC
+RSIG_FC_PATH = GandalfFalconC
 RSIG_M_PATH = GandalfMitaka
 RSIG_PATH  ?= $(RSIG_F_PATH)
 CFLAGS     += -DRSIG_INSTANCE=\"$(RSIG_PATH)\"

@@ -61,7 +61,7 @@ int main(){
               pq_akem_keygen(&sender_sk, &sender_pk),
               "}");
 
-    WRAP_FUNC("//pq_akem_encap",
+    WRAP_FUNC("pq_akem_encap",
               "\\providecommand\\" KEM_INSTANCE RSIG_INSTANCE
               "PQAKEMEnc{",
               cycles, time0, time1,
