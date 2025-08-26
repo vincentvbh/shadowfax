@@ -30,7 +30,7 @@ Type `make`. Six binary files will be produced.
 
 ## Scripts for benchmarking
 
-Running `./make_bench.sh` will automatically build and benchmark the implementations. This requires root access while benchmarking on macOS.
+Running `bash ./make_bench.sh` will automatically build and benchmark the implementations. This requires root access while benchmarking on macOS.
 Thousands of cycles are written to the file `bench.txt` and converted into latex commands in `bench_latex.tex`.
 
 ## Example usage without scripts
@@ -48,7 +48,7 @@ Type `./test_dh_akem`. Sample output:
 ```
 
 #### Benchmark
-Type `./speed_dh_akem`.
+Type `./speed_dh_akem` or `sudo ./speed_dh_akem` on macOS.
 
 ### PQ-AKEM
 
@@ -65,9 +65,9 @@ Type `./test_pq_akem`. Sample output:
 ```
 
 #### Benchmark
-Type `./speed_pq_akem`.
+Type `./speed_pq_akem` or `sudo ./speed_pq_akem` on macOS
 
-### Hybrid AKEM
+### Hybrid AKEM (Shadowfax)
 
 #### Test for correctness
 Type `./test_h_akem`. Sample output:
@@ -82,7 +82,7 @@ Type `./test_h_akem`. Sample output:
 ```
 
 #### Benchmark
-Type `./speed_h_akem`.
+Type `./speed_h_akem` or `sudo ./speed_h_akem` on macOS.
 
 
 
