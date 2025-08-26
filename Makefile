@@ -1,7 +1,7 @@
 
 CC          = gcc
 
-CFLAGS      = -O3 -Wall -mcpu=native -mtune=native
+CFLAGS      = -O3 -Wall -mcpu=native -mtune=native -Wno-unused-command-line-argument
 
 CYCL_PATH   = cycles
 
@@ -41,13 +41,13 @@ NGEN_HEADER = $(wildcard $(NGEN_PATH)/*.h)
 NGEN_SOURCE = $(wildcard $(NGEN_PATH)/*.c)
 
 KEM_HEADER  = $(wildcard $(KEM_PATH)/*.h)
-KEM_SOURCE  = $(filter-out $(KEM_PATH)/modgen.c $(KEM_PATH)/modgen257.c $(KEM_PATH)/modgen769.c $(KEM_PATH)/modgen64513.c $(KEM_PATH)/test.c, $(wildcard $(KEM_PATH)/*.c))
+KEM_SOURCE  = $(filter-out $(KEM_PATH)/modgen.c $(KEM_PATH)/modgen257.c $(KEM_PATH)/modgen769.c $(KEM_PATH)/modgen64513.c $(wildcard $(KEM_PATH)/test*), $(wildcard $(KEM_PATH)/*.c))
 
 RSIG_HEADER = $(wildcard $(RSIG_PATH)/*.h)
-RSIG_SOURCE = $(filter-out $(RSIG_PATH)/samplerZ_table.c $(RSIG_PATH)/test.c, $(wildcard $(RSIG_PATH)/*.c))
+RSIG_SOURCE = $(filter-out $(RSIG_PATH)/samplerZ_table.c $(wildcard $(RSIG_PATH)/test*), $(wildcard $(RSIG_PATH)/*.c))
 
 DH_HEADER   = $(wildcard $(DH_PATH)/*.h)
-DH_SOURCE   = $(filter-out $(DH_PATH)/test.c, $(wildcard $(DH_PATH)/*.c))
+DH_SOURCE   = $(filter-out $(wildcard $(DH_PATH)/test*), $(wildcard $(DH_PATH)/*.c))
 
 HEADERS     = $(RAND_HEADER) $(HASH_HEADER) $(SYMM_HEADER) $(NGEN_HEADER) $(KEM_HEADER) $(RSIG_HEADER) $(DH_HEADER)
 

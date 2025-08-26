@@ -17,9 +17,7 @@
 - Dell Inc. XPS 9320, Ubuntu 22.04.5 LTS, `gcc (Ubuntu 11.4.0-1ubuntu1~22.04) 11.4.0`
 - Dell Inc. XPS 9320, Ubuntu 22.04.5 LTS, `Ubuntu clang version 14.0.0-1ubuntu1.1`
 - MacBook Pro 2020 (Intel(R) Core(TM) i7-1068NG7 CPU @ 2.30GHz), `Apple clang version 12.0.0 (clang-1200.0.32.28)`,
-`GNU Make 3.81`
-
-`GNU bash, version 5.2.37(1)-release (x86_64-apple-darwin22.6.0)`
+`GNU Make 3.81`, `GNU bash, version 5.2.37(1)-release (x86_64-apple-darwin22.6.0)`
 
 ## How to compile
 Type `make`. Six binary files will be produced.
@@ -32,7 +30,7 @@ Type `make`. Six binary files will be produced.
 
 ## Scripts for benchmarking
 
-Running `./make_bench.sh` will automatically build and benchmark the implementations.
+Running `./make_bench.sh` will automatically build and benchmark the implementations. This requires root access while benchmarking on macOS.
 Thousands of cycles are written to the file `bench.txt` and converted into latex commands in `bench_latex.tex`.
 
 ## Example usage without scripts

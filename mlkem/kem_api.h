@@ -1,5 +1,5 @@
 #ifndef KEM_API_H
-#define KEM_APIH_
+#define KEM_API_H
 
 #include <stdint.h>
 #include <stddef.h>
