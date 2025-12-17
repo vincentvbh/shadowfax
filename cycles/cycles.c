@@ -1044,9 +1044,10 @@ uint64_t get_cycle(void) {
   return result;
 }
 
+#endif /* __ARM_ARCH_ISA_A64 */
+
 #endif /* __APPLE__ */
 
-#endif /* __ARM_ARCH_ISA_A64 */
 
 
 
