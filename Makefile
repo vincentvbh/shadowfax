@@ -96,11 +96,11 @@ H_AKEM_OBJS        = $(patsubst %.c, %.o, $(H_AKEM_SOURCES))
 LIBHAKEM           = libhakem.a
 LIBHAKEM_NAME      = hakem
 
-get_compiler:
-	$(CC) --version
-
 all: get_compiler \
 	test speed
+
+get_compiler:
+	$(CC) --version
 
 test: test_dh_akem test_pq_akem test_h_akem
 

@@ -5,19 +5,23 @@
 - `gcc`
 - `make`
 - `bash`
+- `cc`
 
 To check the versions, run the following
 - `gcc --version`
 - `make --version`
 - `bash --version`
+- `cc --version`
 
-### Notes on the software dependencies
+### Notes on the dependencies
 
 The performance numbers are highly tied to two things:
 - The hardware.
 - And the compiler.
 
-Other software dependencies are about the automation of the benchmarking.
+The compiler `gcc` is used for compiling, and can be overwritten by something else while running `Makefile`.
+The command `cc` is used only for post-processing along with other scripts.
+Dependencies on `make` and `bash` are about the automation of the benchmarking.
 
 ## Our benchmark environment
 - Apple M1 Pro
@@ -42,7 +46,28 @@ Other software dependencies are about the automation of the benchmarking.
     - `GNU Make 3.81`.
     - `GNU bash, version 5.2.37(1)-release (x86_64-apple-darwin22.6.0)`.
 
-## How to compile
+## Scripts for compiling and benchmarking
+
+Run
+```
+bash ./make_bench.sh
+```
+
+`make_bench.sh` will automatically build and benchmark the implementations. Benchmarking requires root access while benchmarking on macOS.
+
+### Outputs
+
+Thousands of cycles are written to the file `bench.txt` and converted into latex commands in `bench_latex.tex`.
+
+### Additional notes on benchmarking on other platforms
+
+We can also produce the performance numbers on other platforms with the same software (see `./cycles/cycles.[ch]`). The following platforms should also work.
+- Raspberry pi with a 64-bit Linux OS. This requires Raspberry pi 3/4/5.
+- x86 with a Linux OS.
+
+However, additional steps, such as inserting kernel modules and turning off hyperthreading and Turbo boost, are required to benchmark the performance properly. Performance on these platforms are not part of the artifact.
+
+## How to compile without `bash` scripts
 Type `make`. Six binary files will be produced.
 - `test_dh_akem`: test the correctness of the DH-AKEM.
 - `test_pq_akem`: test the correctness of the PQ-AKEM.
@@ -57,25 +82,16 @@ Type `make`. Six binary files will be produced.
 - `RSIG_PATH` specifies the path to the ring signature.
 
 Examples:
-- `make BAT GandalfMitaka`
-- `make BAT GandalfFalcon`
-- `make BAT GandalfFalconC`
-- `make mlkem GandalfMitaka`
-- `make mlkem GandalfFalcon`
-- `make mlkem GandalfFalconC`
+- `make KEM_PATH=mlkem RSIG_PATH=GandalfFalcon` (default)
+- `make KEM_PATH=mlkem RSIG_PATH=GandalfFalconC`
+- `make KEM_PATH=mlkem RSIG_PATH=GandalfMitaka`
+- `make KEM_PATH=BAT RSIG_PATH=GandalfFalcon`
+- `make KEM_PATH=BAT RSIG_PATH=GandalfFalconC`
+- `make KEM_PATH=BAT RSIG_PATH=GandalfMitaka`
 
-## Scripts for benchmarking
+One can also overwrite the compiler (defaulted to `gcc`) with `CC=[compiler]`.
 
-Running `bash ./make_bench.sh` will automatically build and benchmark the implementations. This requires root access while benchmarking on macOS.
-Thousands of cycles are written to the file `bench.txt` and converted into latex commands in `bench_latex.tex`.
-
-We can also produce the performance numbers on other platforms with the same software (see `./cycles/cycles.[ch]`). The following platforms should also work.
-- Raspberry pi with a 64-bit Linux OS. This requires Raspberry pi 3/4/5.
-- x86 with a Linux OS.
-
-However, additional steps, such as inserting kernel modules and turning off hyperthreading and Turbo boost, are required to benchmark the performance properly. Performance on these platforms are not part of the artifact.
-
-## Example usage without scripts
+## Example usage without `bash` scripts
 
 ### DH-AKEM
 
@@ -125,6 +141,14 @@ Type `./test_h_akem`. Sample output:
 
 #### Benchmark
 Type `./speed_h_akem` or `sudo ./speed_h_akem` on macOS.
+
+## Additional notes on the scripts
+
+- `clean_up.sh`: Clean up all the generated files.
+- `package_artifact.sh`: Create a standalone `.zip` file with all the generated files and `github`-associated files removed.
+- `make_bench.sh`: Building and benchmarking the implementations. `cc` compiles a post-processing program converting the raw data into LaTeX commands.
+
+
 
 
 
