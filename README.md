@@ -1,6 +1,28 @@
 
 # Shadowfax
 
+This artifact accompanies the paper ***SHADOWFAX: Hybrid Security and Deniability for AKEMs*** for hybrid deniable AKEMs.
+We provide several portable implementations of the hybrid AKEM SHADOWFAX.
+When instantiated with standardised components (ML–KEM and FALCON),
+SHADOWFAX yields ciphertexts of 1,728 bytes and public keys of 2,036 bytes,
+with encapsulation and decapsulation costs of 1.8M and 0.7M cycles on an Apple M1 Pro.
+
+This artifact provides the portable implementations for
+- Pre-quantum AKEM with `curve25519`
+- Post-quantum AKEM built from
+    - one of the following post-quantum KEM,
+        - `mlkem-512`
+        - `bat-257`
+    - and a post-quantum ring signature based on one of the following digital signature
+        - `falcon-512` key generation + `falcon-512` sampler in C
+        - `falcon-512` key generation + `falcon-512` sampler with platform-specific inline assembly
+        - Antrag key generation + Mitaka sampler
+- Hybrid AKEM from
+    - the pre-quantum NIKE with `curve25519`,
+    - and the set of combinations of post-quantum KEM and ring signature.
+
+Regarding the `falcon-512` inline assembly, the assembly parts are guarded by compile-time architecture tests and are portable. Our paper reports the performance of all above except for `falcon-512` in C.
+
 ## Software requirements
 - `gcc`
 - `make`

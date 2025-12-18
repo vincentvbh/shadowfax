@@ -22,12 +22,12 @@ echo "Benchmarking hybrid AKEM with $1 + $2..."
 fi
 }
 
-bench BAT GandalfFalcon
-bench BAT GandalfFalconC
-bench BAT GandalfMitaka
 bench mlkem GandalfFalcon
 bench mlkem GandalfFalconC
 bench mlkem GandalfMitaka
+bench BAT GandalfFalcon
+bench BAT GandalfFalconC
+bench BAT GandalfMitaka
 
 if ! command -v cc > /dev/null 2>&1
 then
