@@ -1,3 +1,7 @@
+
+This folder contains the source code for the post-quantum AKEM Gandalf from Falcon (FN-DSA) key generation and signature generation.
+The inline assembly subroutines are selected at compile time.
+
 # FN-DSA (in C)
 
 FN-DSA is a new *upcoming* post-quantum signature scheme, currently
@@ -65,6 +69,8 @@ microcontroller).
 
 # Gandalf
 
+Below are the modified/added files for Gandalf.
+
 - gandalf_samplerZ.h
 - gandalf_samplerZ.c
 - hash.c
@@ -81,3 +87,5 @@ microcontroller).
 - rsig_api.h
 - test.c
 
+# License
+All the files are [public domain](https://unlicense.org/).

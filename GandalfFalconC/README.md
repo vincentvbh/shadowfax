@@ -1,3 +1,7 @@
+
+This folder contains the source code for the post-quantum AKEM Gandalf from Falcon (FN-DSA) key generation and signature generation.
+The intrinsics are explicitly turned off and the C implementations are used.
+
 # FN-DSA (in C)
 
 FN-DSA is a new *upcoming* post-quantum signature scheme, currently
@@ -63,7 +67,16 @@ the [bench_cm4/](bench_cm4) subdirectory for a benchmarking application
 that can run on an STM32F407G-DISC1 board (using an STM32F4
 microcontroller).
 
+## Removal of the intrinsics
+
+The FN-DSA files are modified by running
+```
+bash ./rm_intrinsics.sh
+```
+
 # Gandalf
+
+Below are the modified/added files for Gandalf.
 
 - gandalf_samplerZ.h
 - gandalf_samplerZ.c
@@ -80,4 +93,7 @@ microcontroller).
 - rsig_params.h
 - rsig_api.h
 - test.c
+
+# License
+All the files are [public domain](https://unlicense.org/).
 
