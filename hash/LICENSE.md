@@ -3,23 +3,19 @@ Files in this folder are covered by multiple combinations of licenses.
 Below is an exhaustive list of the licenses of each files. See **Contents of the Licenses** for the contents of the licenses.
 
 # License 1
-- `kem[128,257,769].c`
-- `modqp.c`
+
+- `blake2b.c`
+- `blake2s.c`
+
+# License 1 and License 3 (in this order)
+
+- `blake2.h`
 
 # License 2
-- `kem_api.[ch]`
-- `Makefile`
 
-# License 1 and License 2 (in this order)
-- `arith.h`
-- `config.h`
-- `encode_decode.[ch]`
-- `kem[128,257,769].h`
-- `kem_params.h`
-- `keygen.[ch]`
-- `modgen[257,64513,769].c`
-- `modqp.h`
-- `test.c`
+- `fips202.[ch]`
+- `hmac.[ch]`
+- `keccakf1600.[ch]`
 
 # Contents of the Licenses
 
@@ -52,6 +48,34 @@ SOFTWARE.
 ## License 2
 
 ```
+This is free and unencumbered software released into the public domain.
+
+Anyone is free to copy, modify, publish, use, compile, sell, or
+distribute this software, either in source code form or as a compiled
+binary, for any purpose, commercial or non-commercial, and by any
+means.
+
+In jurisdictions that recognize copyright laws, the author or authors
+of this software dedicate any and all copyright interest in the
+software to the public domain. We make this dedication for the benefit
+of the public at large and to the detriment of our heirs and
+successors. We intend this dedication to be an overt act of
+relinquishment in perpetuity of all present and future rights to this
+software under copyright law.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+OTHER DEALINGS IN THE SOFTWARE.
+```
+
+## License 3
+
+
+```
 MIT License
 
 Copyright (c) 2025 Vincent Hwang
@@ -74,4 +98,5 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
+
 
