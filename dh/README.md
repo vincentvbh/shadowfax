@@ -1,10 +1,5 @@
 
-# Performance
+This folder contains the source code of the NIKE built from `curve25519`.
 
-```
-nike_keygen cycles: 208034
-nike_sdk cycles: 210053
-nike_akem_encap cycles: 629079
-nike_akem_decap cycles: 418816
-```
-
+# License
+All the files are [public domain](https://unlicense.org/).

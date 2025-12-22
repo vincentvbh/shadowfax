@@ -8,12 +8,12 @@ SHADOWFAX yields ciphertexts of 1,728 bytes and public keys of 2,036 bytes,
 with encapsulation and decapsulation costs of 1.8M and 0.7M cycles on an Apple M1 Pro.
 
 This artifact provides the portable implementations for
-- Pre-quantum AKEM with `curve25519`
+- Pre-quantum AKEM with `curve25519`.
 - Post-quantum AKEM built from
-    - one of the following post-quantum KEM,
+    - one of the following post-quantum KEMs,
         - `mlkem-512`
         - `bat-257`
-    - and a post-quantum ring signature based on one of the following digital signature
+    - and a post-quantum ring signature based on one of the following digital signatures
         - `falcon-512` key generation + `falcon-512` sampler in C
         - `falcon-512` key generation + `falcon-512` sampler with platform-specific inline assembly
         - Antrag key generation + Mitaka sampler
@@ -167,7 +167,7 @@ Type `./speed_h_akem` or `sudo ./speed_h_akem` on macOS.
 ## Additional notes on the scripts
 
 - `clean_up.sh`: Clean up all the generated files.
-- `package_artifact.sh`: Create a standalone `.zip` file with all the generated files and `github`-associated files removed.
+- `package_artifact.sh`: Create a standalone `.zip` file with all the generated files and `git`-associated files removed.
 - `make_bench.sh`: Building and benchmarking the implementations. `cc` compiles a post-processing program converting the raw data into LaTeX commands.
 
 
