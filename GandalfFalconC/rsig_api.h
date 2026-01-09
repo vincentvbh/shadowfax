@@ -4,7 +4,6 @@
 #include <stddef.h>
 #include <stdint.h>
 
-// TODO: update here
 #define SIGN_PUBLICKEY_BYTES 896
 #define SIGN_SECRETKEY_BYTES 2048
 #define SIGN_SIGNATURE_BYTES 650

@@ -68,6 +68,40 @@ Dependencies on `make` and `bash` are about the automation of the benchmarking.
     - `GNU Make 3.81`.
     - `GNU bash, version 5.2.37(1)-release (x86_64-apple-darwin22.6.0)`.
 
+## Structure of this artifact
+
+- Pre-quantum AKEM
+    - `dh`
+    - `dh_akem.c`
+    - `dh_akem_api.h`
+    - `test_dh_akem.c`
+    - `speed_dh_akem.c`
+- Post-quantum AKEM
+    - A post-quantum KEM with the api file `kem_api.h`
+        - `BAT`
+        - `mlkem`
+    - A post-quantum ring signature with the api file `rsig_api.h`. One of the following is sufficient.
+        - `GandalfFalcon`
+        - `GandalfFalconC`
+        - `GandalfMitaka`
+    - `pq_akem.c`
+    - `pq_akem_api.h`
+    - `test_pq_akem.c`
+    - `speed_pq_akem.c`
+- Hybrid AKEM
+    - Pre-quantum AKEM dependencies (excluding `test_*` and `speed_*`)
+    - Post-quantum AKEM dependencies (excluding `test_*` and `speed_*`)
+    - `h_akem.c`
+    - `h_akem_api.h`
+    - `test_h_akem.c`
+    - `speed_h_akem.c`
+- Shared
+    - `cycles`: Access to cycle counters on aarch64 (reported in paper) and x86-64.
+    - `hash`: Cryptographic hash functions. FIPS202, BLAKE2, HMAC.
+    - `ntru_gen`: NTRU solve used in BAT, Falcon, and Mitaka.
+    - `randombytes`: System randombytes and pseudo-random bytes.
+    - `symmetric`: AES.
+
 ## Scripts for compiling and benchmarking
 
 Run
