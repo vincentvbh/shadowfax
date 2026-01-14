@@ -10,18 +10,10 @@
 #include <memory.h>
 #include <assert.h>
 
-// TODO: Sync this file to Falcon.
-
 #define MAXMBYTES 2048
 #define ITERATIONS 2048
 #define MAX(x, y) ((x >= y)? (x):(y))
 #define MIN(x, y) ((x < y)? (x):(y))
-
-int intcmp(const void *x, const void *y)
-{
-    int ix = *(int*)x, iy = *(int*)y;
-    return (ix>iy) - (ix<iy);
-}
 
 int main(){
   seed_rng();

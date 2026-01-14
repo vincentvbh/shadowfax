@@ -41,7 +41,7 @@ The performance numbers are highly tied to two things:
 - The hardware.
 - And the compiler.
 
-The compiler `gcc` is used for compiling, and can be overwritten by something else while running `Makefile`.
+The compiler `gcc` is used for compiling, and can be overwritten by something else while running the `Makefile`.
 The command `cc` is used only for post-processing along with other scripts.
 Dependencies on `make` and `bash` are about the automation of the benchmarking.
 
@@ -77,7 +77,7 @@ Dependencies on `make` and `bash` are about the automation of the benchmarking.
     - `test_dh_akem.c`
     - `speed_dh_akem.c`
 - Post-quantum AKEM
-    - A post-quantum KEM with the api file `kem_api.h`
+    - A post-quantum KEM with the api file `kem_api.h`. One of the following is sufficient.
         - `BAT`
         - `mlkem`
     - A post-quantum ring signature with the api file `rsig_api.h`. One of the following is sufficient.
@@ -96,9 +96,9 @@ Dependencies on `make` and `bash` are about the automation of the benchmarking.
     - `test_h_akem.c`
     - `speed_h_akem.c`
 - Shared
-    - `cycles`: Access to cycle counters on aarch64 (reported in paper) and x86-64.
+    - `cycles`: Access to cycle counters on aarch64 (reported in the paper) and x86-64.
     - `hash`: Cryptographic hash functions. FIPS202, BLAKE2, HMAC.
-    - `ntru_gen`: NTRU solve used in BAT, Falcon, and Mitaka.
+    - `ntru_gen`: NTRU solver used in BAT, Falcon, and Mitaka.
     - `randombytes`: System randombytes and pseudo-random bytes.
     - `symmetric`: AES.
 

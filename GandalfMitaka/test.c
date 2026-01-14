@@ -17,12 +17,6 @@
 #define MAX(x, y) ((x >= y)? (x):(y))
 #define MIN(x, y) ((x < y)? (x):(y))
 
-int intcmp(const void *x, const void *y)
-{
-    int ix = *(int*)x, iy = *(int*)y;
-    return (ix>iy) - (ix<iy);
-}
-
 int main(){
   seed_rng();
   sign_sk sk[16];
