@@ -1,5 +1,39 @@
 
-To be finalized...
+Files in this folder are covered by multiple combinations of licenses.
+Below is an exhaustive list of the licenses of each files. See **Contents of the Licenses** for the contents of the licenses.
+
+# License 1
+
+- `fft.[ch]`
+
+# License 2 and License 3 (in this order)
+
+- `encode_decode.[ch]`
+
+# License 1 and License 3 (in this order)
+
+- `poly.[ch]`
+
+# License 3
+
+- `gandalf_samplerZ.[ch]`
+- `hash.[ch]`
+- `Makefile`
+- `mitaka_sign.[ch]`
+- `pack_unpack.[sh]`
+- `rsig.[ch]`
+- `rsig_api.h`
+- `rsig_params.h`
+- `samplerZ_table.c`
+- `test.c`
+
+# Files modified from [the Mitaka implementation](https://github.com/espitau/Mitaka-EC22)
+
+We have an approval from the authors of Mitaka work for modifying, using, and distributing the implementation for research purpose. Below are the files modified.
+- `mitaka_keygen.[ch]`
+- `mitaka_sampler.[ch]`
+
+# Contents of the Licenses
 
 ## License 1
 
