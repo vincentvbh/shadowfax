@@ -19,6 +19,8 @@
 uint64_t time0, time1;
 uint64_t cycles[NTESTS];
 
+#define SHARED_SECRET_LEN 64
+
 int main(void){
 
     h_akem_sk sender_sk, receiver_sk;
@@ -28,7 +30,7 @@ int main(void){
     rsig_pk internal_rsig_pk;
     rsig_signature internal_signature;
     uint8_t sender_secret[32], receiver_secret[32];
-    uint8_t kk[32];
+    uint8_t kk[SHARED_SECRET_LEN];
     uint8_t m[NTESTS][MLEN];
 
     printf(KEM_INSTANCE "-" RSIG_INSTANCE " " "Hybrid AKEM public key bytes: %4zu\n", sizeof(h_akem_pk));
@@ -92,13 +94,13 @@ int main(void){
     WRAP_FUNC("kem_encap",
               "",
               cycles, time0, time1,
-              kem_encap(kk, 64, &ct.ct, &receiver_pk.kpk),
+              kem_encap(kk, SHARED_SECRET_LEN, &ct.ct, &receiver_pk.kpk),
               "");
 
     WRAP_FUNC("kem_decap",
               "",
               cycles, time0, time1,
-              kem_decap(kk, 64, &ct.ct, &receiver_sk.ksk),
+              kem_decap(kk, SHARED_SECRET_LEN, &ct.ct, &receiver_sk.ksk),
               "");
 
 // ========
