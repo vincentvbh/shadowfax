@@ -1,7 +1,9 @@
 #ifndef M1CYCLES_H
 #define M1CYCLES_H
 
+#include <stdio.h>
 #include <stdint.h>
+#include <stddef.h>
 
 void init_counter(void);
 uint64_t get_cycle(void);

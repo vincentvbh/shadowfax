@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdbool.h>
 #include <ctype.h>
 #include <sys/types.h>
 #include <string.h>
@@ -17,21 +18,37 @@ static const char *default_out = "bench_latex.tex";
 static size_t sprintf_format_000(char *des, uint32_t perf) {
     size_t len = 0;
     uint32_t local_buff[32];
+    bool printed;
     char *local_buff_ptr;
+
+    if(perf == 0) {
+        des[0] = '0';
+        des[1] = '\0';
+        return 1;
+    }
+
     while(perf >= 1000) {
-        local_buff[len] = perf % 1000;
-        len++;
+        local_buff[len++] = perf % 1000;
         perf /= 1000;
     }
     if(perf != 0) {
-        local_buff[len] = perf;
-        len++;
+        local_buff[len++] = perf;
     }
     local_buff_ptr = des;
+    printed = 0;
     for(ssize_t i = len - 1; i > 0; i--){
-        local_buff_ptr += sprintf(local_buff_ptr, "%d\\;", local_buff[i]);
+        if(printed) {
+            local_buff_ptr += sprintf(local_buff_ptr, "%03d\\;", local_buff[i]);
+        }else {
+            local_buff_ptr += sprintf(local_buff_ptr, "%d\\;", local_buff[i]);
+            printed = 1;
+        }
     }
-    local_buff_ptr += sprintf(local_buff_ptr, "%d", local_buff[0]);
+    if(printed) {
+        local_buff_ptr += sprintf(local_buff_ptr, "%03d", local_buff[0]);
+    }else {
+        local_buff_ptr += sprintf(local_buff_ptr, "%d", local_buff[0]);
+    }
     *local_buff_ptr = '\0';
     return local_buff_ptr - des;
 }
