@@ -5,22 +5,22 @@ loaded db: a14 (Apple A14/M1)
 number of fixed counters: 2
 number of configurable counters: 8
 pq_akem_keygen average cycles:
-\providecommand\mlkemGandalfFalconPQAKEMKeyGen{12424}
+\providecommand\mlkemGandalfFalconPQAKEMKeyGen{12264}
 pq_akem_encap average cycles:
-\providecommand\mlkemGandalfFalconPQAKEMEnc{1112}
+\providecommand\mlkemGandalfFalconPQAKEMEnc{1113}
 pq_akem_decap average cycles:
-\providecommand\mlkemGandalfFalconPQAKEMDec{235}
+\providecommand\mlkemGandalfFalconPQAKEMDec{238}
 kem_keygen average cycles:
-73
+75
 kem_encap average cycles:
-83
+85
 kem_decap average cycles:
-104
+107
 sign_keygen average cycles:
-12312
+12239
 MLEN = 3264
 Gandalf_sign average cycles:
-950
+945
 Gandalf_verify average cycles:
 110
 mlkem-GandalfFalcon Hybrid AKEM public key bytes: 1728
@@ -30,28 +30,28 @@ loaded db: a14 (Apple A14/M1)
 number of fixed counters: 2
 number of configurable counters: 8
 h_akem_keygen average cycles:
-\providecommand\mlkemGandalfFalconHybridAKEMKeyGen{12788}
+\providecommand\mlkemGandalfFalconHybridAKEMKeyGen{12729}
 h_akem_encap average cycles:
-\providecommand\mlkemGandalfFalconHybridAKEMEnc{1802}
+\providecommand\mlkemGandalfFalconHybridAKEMEnc{1808}
 h_akem_decap average cycles:
-\providecommand\mlkemGandalfFalconHybridAKEMDec{674}
+\providecommand\mlkemGandalfFalconHybridAKEMDec{679}
 nike_keygen average cycles:
-227
+226
 nike_sdk average cycles:
-229
+227
 kem_keygen average cycles:
-74
+73
 kem_encap average cycles:
-84
+83
 kem_decap average cycles:
-105
+104
 sign_keygen average cycles:
-\providecommand\GandalfFalconGandalfRSigKeyGen{12202}
+\providecommand\GandalfFalconGandalfRSigKeyGen{12241}
 MLEN = 1568
 Gandalf_sign average cycles:
-\providecommand\GandalfFalconGandalfRSigSig{933}
+\providecommand\GandalfFalconGandalfRSigSig{926}
 Gandalf_verify average cycles:
-\providecommand\GandalfFalconGandalfRSigVrfy{92}
+\providecommand\GandalfFalconGandalfRSigVrfy{93}
 mlkem-GandalfFalconC Post-quantum AKEM public key bytes: 1696
 mlkem-GandalfFalconC Post-quantum AKEM secret key bytes: 3680
 mlkem-GandalfFalconC Post-quantum AKEM ciphertext bytes: 2044
@@ -59,24 +59,24 @@ loaded db: a14 (Apple A14/M1)
 number of fixed counters: 2
 number of configurable counters: 8
 pq_akem_keygen average cycles:
-\providecommand\mlkemGandalfFalconCPQAKEMKeyGen{12404}
+\providecommand\mlkemGandalfFalconCPQAKEMKeyGen{12371}
 pq_akem_encap average cycles:
-\providecommand\mlkemGandalfFalconCPQAKEMEnc{8858}
+\providecommand\mlkemGandalfFalconCPQAKEMEnc{8693}
 pq_akem_decap average cycles:
-\providecommand\mlkemGandalfFalconCPQAKEMDec{241}
+\providecommand\mlkemGandalfFalconCPQAKEMDec{237}
 kem_keygen average cycles:
-74
+75
 kem_encap average cycles:
-84
+85
 kem_decap average cycles:
-105
+106
 sign_keygen average cycles:
-12323
+12264
 MLEN = 3264
 Gandalf_sign average cycles:
-8579
+8511
 Gandalf_verify average cycles:
-111
+112
 mlkem-GandalfFalconC Hybrid AKEM public key bytes: 1728
 mlkem-GandalfFalconC Hybrid AKEM secret key bytes: 3712
 mlkem-GandalfFalconC Hybrid AKEM ciphertext bytes: 2076
@@ -84,26 +84,26 @@ loaded db: a14 (Apple A14/M1)
 number of fixed counters: 2
 number of configurable counters: 8
 h_akem_keygen average cycles:
-\providecommand\mlkemGandalfFalconCHybridAKEMKeyGen{12663}
+\providecommand\mlkemGandalfFalconCHybridAKEMKeyGen{12738}
 h_akem_encap average cycles:
-\providecommand\mlkemGandalfFalconCHybridAKEMEnc{9340}
+\providecommand\mlkemGandalfFalconCHybridAKEMEnc{9310}
 h_akem_decap average cycles:
-\providecommand\mlkemGandalfFalconCHybridAKEMDec{673}
+\providecommand\mlkemGandalfFalconCHybridAKEMDec{670}
 nike_keygen average cycles:
-230
+225
 nike_sdk average cycles:
-230
+226
 kem_keygen average cycles:
-74
+73
 kem_encap average cycles:
-84
+83
 kem_decap average cycles:
-105
+103
 sign_keygen average cycles:
-\providecommand\GandalfFalconCGandalfRSigKeyGen{12348}
+\providecommand\GandalfFalconCGandalfRSigKeyGen{12297}
 MLEN = 1568
 Gandalf_sign average cycles:
-\providecommand\GandalfFalconCGandalfRSigSig{8547}
+\providecommand\GandalfFalconCGandalfRSigSig{8526}
 Gandalf_verify average cycles:
 \providecommand\GandalfFalconCGandalfRSigVrfy{92}
 mlkem-GandalfMitaka Post-quantum AKEM public key bytes: 1696
@@ -113,24 +113,24 @@ loaded db: a14 (Apple A14/M1)
 number of fixed counters: 2
 number of configurable counters: 8
 pq_akem_keygen average cycles:
-\providecommand\mlkemGandalfMitakaPQAKEMKeyGen{13543}
+\providecommand\mlkemGandalfMitakaPQAKEMKeyGen{13649}
 pq_akem_encap average cycles:
-\providecommand\mlkemGandalfMitakaPQAKEMEnc{1362}
+\providecommand\mlkemGandalfMitakaPQAKEMEnc{1342}
 pq_akem_decap average cycles:
 \providecommand\mlkemGandalfMitakaPQAKEMDec{236}
 kem_keygen average cycles:
-73
+74
 kem_encap average cycles:
 84
 kem_decap average cycles:
-105
+104
 sign_keygen average cycles:
-13627
+13583
 MLEN = 3264
 Gandalf_sign average cycles:
-1183
+1176
 Gandalf_verify average cycles:
-111
+109
 mlkem-GandalfMitaka Hybrid AKEM public key bytes: 1728
 mlkem-GandalfMitaka Hybrid AKEM secret key bytes: 3712
 mlkem-GandalfMitaka Hybrid AKEM ciphertext bytes: 2076
@@ -138,28 +138,28 @@ loaded db: a14 (Apple A14/M1)
 number of fixed counters: 2
 number of configurable counters: 8
 h_akem_keygen average cycles:
-\providecommand\mlkemGandalfMitakaHybridAKEMKeyGen{13872}
+\providecommand\mlkemGandalfMitakaHybridAKEMKeyGen{13834}
 h_akem_encap average cycles:
-\providecommand\mlkemGandalfMitakaHybridAKEMEnc{2037}
+\providecommand\mlkemGandalfMitakaHybridAKEMEnc{2064}
 h_akem_decap average cycles:
-\providecommand\mlkemGandalfMitakaHybridAKEMDec{680}
+\providecommand\mlkemGandalfMitakaHybridAKEMDec{673}
 nike_keygen average cycles:
 228
 nike_sdk average cycles:
-230
+227
 kem_keygen average cycles:
-74
+73
 kem_encap average cycles:
-84
+83
 kem_decap average cycles:
-105
+103
 sign_keygen average cycles:
-\providecommand\GandalfMitakaGandalfRSigKeyGen{13434}
+\providecommand\GandalfMitakaGandalfRSigKeyGen{13474}
 MLEN = 1568
 Gandalf_sign average cycles:
-\providecommand\GandalfMitakaGandalfRSigSig{1167}
+\providecommand\GandalfMitakaGandalfRSigSig{1165}
 Gandalf_verify average cycles:
-\providecommand\GandalfMitakaGandalfRSigVrfy{96}
+\providecommand\GandalfMitakaGandalfRSigVrfy{92}
 BAT-GandalfFalcon Post-quantum AKEM public key bytes: 1417
 BAT-GandalfFalcon Post-quantum AKEM secret key bytes: 5001
 BAT-GandalfFalcon Post-quantum AKEM ciphertext bytes: 1749
@@ -167,22 +167,22 @@ loaded db: a14 (Apple A14/M1)
 number of fixed counters: 2
 number of configurable counters: 8
 pq_akem_keygen average cycles:
-\providecommand\BATGandalfFalconPQAKEMKeyGen{24811}
+\providecommand\BATGandalfFalconPQAKEMKeyGen{24516}
 pq_akem_encap average cycles:
-\providecommand\BATGandalfFalconPQAKEMEnc{1108}
+\providecommand\BATGandalfFalconPQAKEMEnc{1102}
 pq_akem_decap average cycles:
-\providecommand\BATGandalfFalconPQAKEMDec{355}
+\providecommand\BATGandalfFalconPQAKEMDec{351}
 kem_keygen average cycles:
-12320
+12236
 kem_encap average cycles:
-68
+65
 kem_decap average cycles:
-230
+232
 sign_keygen average cycles:
-12359
+12428
 MLEN = 2411
 Gandalf_sign average cycles:
-931
+953
 Gandalf_verify average cycles:
 101
 BAT-GandalfFalcon Hybrid AKEM public key bytes: 1449
@@ -192,28 +192,28 @@ loaded db: a14 (Apple A14/M1)
 number of fixed counters: 2
 number of configurable counters: 8
 h_akem_keygen average cycles:
-\providecommand\BATGandalfFalconHybridAKEMKeyGen{24942}
+\providecommand\BATGandalfFalconHybridAKEMKeyGen{24776}
 h_akem_encap average cycles:
-\providecommand\BATGandalfFalconHybridAKEMEnc{1798}
+\providecommand\BATGandalfFalconHybridAKEMEnc{1786}
 h_akem_decap average cycles:
 \providecommand\BATGandalfFalconHybridAKEMDec{796}
 nike_keygen average cycles:
 228
 nike_sdk average cycles:
-229
+226
 kem_keygen average cycles:
-12382
+11547
 kem_encap average cycles:
-66
+63
 kem_decap average cycles:
-236
+231
 sign_keygen average cycles:
-\providecommand\GandalfFalconGandalfRSigKeyGen{12505}
+\providecommand\GandalfFalconGandalfRSigKeyGen{12391}
 MLEN = 994
 Gandalf_sign average cycles:
-\providecommand\GandalfFalconGandalfRSigSig{922}
+\providecommand\GandalfFalconGandalfRSigSig{911}
 Gandalf_verify average cycles:
-\providecommand\GandalfFalconGandalfRSigVrfy{86}
+\providecommand\GandalfFalconGandalfRSigVrfy{85}
 BAT-GandalfFalconC Post-quantum AKEM public key bytes: 1417
 BAT-GandalfFalconC Post-quantum AKEM secret key bytes: 5001
 BAT-GandalfFalconC Post-quantum AKEM ciphertext bytes: 1749
@@ -221,22 +221,22 @@ loaded db: a14 (Apple A14/M1)
 number of fixed counters: 2
 number of configurable counters: 8
 pq_akem_keygen average cycles:
-\providecommand\BATGandalfFalconCPQAKEMKeyGen{24360}
+\providecommand\BATGandalfFalconCPQAKEMKeyGen{24629}
 pq_akem_encap average cycles:
-\providecommand\BATGandalfFalconCPQAKEMEnc{8730}
+\providecommand\BATGandalfFalconCPQAKEMEnc{8736}
 pq_akem_decap average cycles:
-\providecommand\BATGandalfFalconCPQAKEMDec{349}
+\providecommand\BATGandalfFalconCPQAKEMDec{351}
 kem_keygen average cycles:
-12097
+12391
 kem_encap average cycles:
-64
+65
 kem_decap average cycles:
 232
 sign_keygen average cycles:
-12319
+12327
 MLEN = 2411
 Gandalf_sign average cycles:
-8541
+8504
 Gandalf_verify average cycles:
 101
 BAT-GandalfFalconC Hybrid AKEM public key bytes: 1449
@@ -246,26 +246,26 @@ loaded db: a14 (Apple A14/M1)
 number of fixed counters: 2
 number of configurable counters: 8
 h_akem_keygen average cycles:
-\providecommand\BATGandalfFalconCHybridAKEMKeyGen{24710}
+\providecommand\BATGandalfFalconCHybridAKEMKeyGen{24869}
 h_akem_encap average cycles:
-\providecommand\BATGandalfFalconCHybridAKEMEnc{9429}
+\providecommand\BATGandalfFalconCHybridAKEMEnc{9470}
 h_akem_decap average cycles:
-\providecommand\BATGandalfFalconCHybridAKEMDec{800}
+\providecommand\BATGandalfFalconCHybridAKEMDec{807}
 nike_keygen average cycles:
-227
+228
 nike_sdk average cycles:
 228
 kem_keygen average cycles:
-11861
+12174
 kem_encap average cycles:
-62
+64
 kem_decap average cycles:
 231
 sign_keygen average cycles:
-\providecommand\GandalfFalconCGandalfRSigKeyGen{12289}
+\providecommand\GandalfFalconCGandalfRSigKeyGen{12383}
 MLEN = 994
 Gandalf_sign average cycles:
-\providecommand\GandalfFalconCGandalfRSigSig{8416}
+\providecommand\GandalfFalconCGandalfRSigSig{8504}
 Gandalf_verify average cycles:
 \providecommand\GandalfFalconCGandalfRSigVrfy{85}
 BAT-GandalfMitaka Post-quantum AKEM public key bytes: 1417
@@ -275,24 +275,24 @@ loaded db: a14 (Apple A14/M1)
 number of fixed counters: 2
 number of configurable counters: 8
 pq_akem_keygen average cycles:
-\providecommand\BATGandalfMitakaPQAKEMKeyGen{25484}
+\providecommand\BATGandalfMitakaPQAKEMKeyGen{25781}
 pq_akem_encap average cycles:
-\providecommand\BATGandalfMitakaPQAKEMEnc{1328}
+\providecommand\BATGandalfMitakaPQAKEMEnc{1348}
 pq_akem_decap average cycles:
-\providecommand\BATGandalfMitakaPQAKEMDec{354}
+\providecommand\BATGandalfMitakaPQAKEMDec{352}
 kem_keygen average cycles:
-12083
+12457
 kem_encap average cycles:
-64
+66
 kem_decap average cycles:
-229
+232
 sign_keygen average cycles:
-13580
+13538
 MLEN = 2411
 Gandalf_sign average cycles:
-1184
+1168
 Gandalf_verify average cycles:
-103
+101
 BAT-GandalfMitaka Hybrid AKEM public key bytes: 1449
 BAT-GandalfMitaka Hybrid AKEM secret key bytes: 5033
 BAT-GandalfMitaka Hybrid AKEM ciphertext bytes: 1781
@@ -300,25 +300,25 @@ loaded db: a14 (Apple A14/M1)
 number of fixed counters: 2
 number of configurable counters: 8
 h_akem_keygen average cycles:
-\providecommand\BATGandalfMitakaHybridAKEMKeyGen{26208}
+\providecommand\BATGandalfMitakaHybridAKEMKeyGen{25903}
 h_akem_encap average cycles:
-\providecommand\BATGandalfMitakaHybridAKEMEnc{2048}
+\providecommand\BATGandalfMitakaHybridAKEMEnc{2080}
 h_akem_decap average cycles:
-\providecommand\BATGandalfMitakaHybridAKEMDec{806}
+\providecommand\BATGandalfMitakaHybridAKEMDec{818}
 nike_keygen average cycles:
 229
 nike_sdk average cycles:
-229
+227
 kem_keygen average cycles:
-12170
+12086
 kem_encap average cycles:
-64
+65
 kem_decap average cycles:
 233
 sign_keygen average cycles:
-\providecommand\GandalfMitakaGandalfRSigKeyGen{13568}
+\providecommand\GandalfMitakaGandalfRSigKeyGen{13472}
 MLEN = 994
 Gandalf_sign average cycles:
-\providecommand\GandalfMitakaGandalfRSigSig{1155}
+\providecommand\GandalfMitakaGandalfRSigSig{1159}
 Gandalf_verify average cycles:
-\providecommand\GandalfMitakaGandalfRSigVrfy{85}
+\providecommand\GandalfMitakaGandalfRSigVrfy{84}
