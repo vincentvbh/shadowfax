@@ -99,6 +99,12 @@ int main(int argc, char **argv) {
 
         fprintf(fp_out, "%s", buff);
 
+        buff_ptr = buff + i - 1;
+        buff_ptr += sprintf(buff_ptr, "ms{");
+        buff_ptr += sprintf(buff_ptr, "%.2f", (double)perf / 3000.);
+        buff_ptr += sprintf(buff_ptr, "}\n");
+        fprintf(fp_out, "%s", buff);
+
 
     }
 
