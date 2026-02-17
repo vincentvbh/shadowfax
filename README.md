@@ -102,20 +102,28 @@ Dependencies on `make` and `bash` are about the automation of the benchmarking.
     - `randombytes`: System randombytes and pseudo-random bytes.
     - `symmetric`: AES.
 
+## Scripts for compiling and testing correctness
+
+Run
+```
+bash ./test_everything.sh
+```
+
+`test_everything.sh` will automatically build and benchmark the implementations.
+The log will be written to `./log/test_log.txt`.
+
 ## Scripts for compiling and benchmarking
 
 Run
 ```
-bash ./make_bench.sh
+bash ./bench_everything.sh
 ```
 
-`make_bench.sh` will automatically build and benchmark the implementations. Benchmarking requires root access while benchmarking on macOS.
+`bench_everything.sh` will automatically build and benchmark the implementations. Benchmarking requires root access while benchmarking on macOS.
+The log will be written to `./log/bench_log.txt`,
+and the numbers will be converted into LaTex commands in `./log/bench_latex.tex`.
 
-### Outputs
-
-Thousands of cycles are written to the file `bench.txt` and converted into latex commands in `bench_latex.tex`.
-
-### Additional notes on benchmarking on other platforms
+## Additional notes on benchmarking on other platforms
 
 We can also produce the performance numbers on other platforms with the same software (see `./cycles/cycles.[ch]`). The following platforms should also work.
 - Raspberry pi with a 64-bit Linux OS. This requires Raspberry pi 3/4/5.
@@ -123,86 +131,15 @@ We can also produce the performance numbers on other platforms with the same sof
 
 However, additional steps, such as inserting kernel modules and turning off hyperthreading and Turbo boost, are required to benchmark the performance properly. Performance on these platforms are not part of the artifact.
 
-## How to compile without `bash` scripts
-Type `make`. Six binary files will be produced.
-- `test_dh_akem`: test the correctness of the DH-AKEM.
-- `test_pq_akem`: test the correctness of the PQ-AKEM.
-- `test_h_akem`: test the correctness of the hybrid AKEM (Shadowfax).
-- `speed_dh_akem`: benchmark the DH-AKEM.
-- `speed_pq_akem`: benchmark the PQ-AKEM.
-- `speed_h_akem`: benchmark the hybrid AKEM (Shadowfax).
+## How to compile, test, and benchmark without `bash` scripts
 
-### Options for the underlying KEM and ring signature
-
-- `KEM_PATH` specifies the path to the KEM.
-- `RSIG_PATH` specifies the path to the ring signature.
-
-Examples:
-- `make KEM_PATH=mlkem RSIG_PATH=GandalfFalcon` (default)
-- `make KEM_PATH=mlkem RSIG_PATH=GandalfFalconC`
-- `make KEM_PATH=mlkem RSIG_PATH=GandalfMitaka`
-- `make KEM_PATH=BAT RSIG_PATH=GandalfFalcon`
-- `make KEM_PATH=BAT RSIG_PATH=GandalfFalconC`
-- `make KEM_PATH=BAT RSIG_PATH=GandalfMitaka`
-
-One can also overwrite the compiler (defaulted to `gcc`) with `CC=[compiler]`.
-
-## Example usage without `bash` scripts
-
-### DH-AKEM
-
-#### Test for correctness
-Type `./test_dh_akem`. Sample output:
-```
-2048/2048 compatible shared secret pairs. (ok).
-
-0/4096 success decapsulation + compatible shared secret pairs. (ok).
-
-0/2048 compatible shared secret pairs. (ok).
-```
-
-#### Benchmark
-Type `./speed_dh_akem` or `sudo ./speed_dh_akem` on macOS.
-
-### PQ-AKEM
-
-#### Test for correctness
-Type `./test_pq_akem`. Sample output:
-```
-2048/2048 compatible shared secret pairs. (ok).
-
-2048/2048 compatible shared secret pairs. (ok).
-
-0/4096 success decapsulation + compatible shared secret pairs. (ok).
-
-0/2048 compatible shared secret pairs. (ok).
-```
-
-#### Benchmark
-Type `./speed_pq_akem` or `sudo ./speed_pq_akem` on macOS
-
-### Hybrid AKEM (Shadowfax)
-
-#### Test for correctness
-Type `./test_h_akem`. Sample output:
-```
-2048/2048 compatible shared secret pairs. (ok).
-
-2048/2048 compatible shared secret pairs. (ok).
-
-0/4096 success decapsulation + compatible shared secret pairs. (ok).
-
-0/2048 compatible shared secret pairs. (ok).
-```
-
-#### Benchmark
-Type `./speed_h_akem` or `sudo ./speed_h_akem` on macOS.
+See `build_run_doc.md`.
 
 ## Additional notes on the scripts
 
 - `clean_up.sh`: Clean up all the generated files.
 - `package_artifact.sh`: Create a standalone `.zip` file with all the generated files and `git`-associated files removed.
-- `make_bench.sh`: Building and benchmarking the implementations. `cc` compiles a post-processing program converting the raw data into LaTeX commands.
+- `bench_everything.sh`: Building and benchmarking the implementations. `cc` compiles a post-processing program converting the raw data into LaTeX commands.
 
 
 
