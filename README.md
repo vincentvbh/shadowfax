@@ -43,7 +43,7 @@ The performance numbers are highly tied to two things:
 
 The compiler `gcc` is used for compiling, and can be overwritten by something else while running the `Makefile`.
 The command `cc` is used only for post-processing along with other scripts.
-Dependencies on `make` and `bash` are about the automation of the benchmarking.
+`make` and `bash` are about the automation of the compilation, testing, and benchmarking.
 
 ## Our benchmark environment
 - Apple M1 Pro
@@ -72,10 +72,10 @@ Dependencies on `make` and `bash` are about the automation of the benchmarking.
 
 - Pre-quantum AKEM
     - `dh`
-    - `dh_akem.c`
-    - `dh_akem_api.h`
-    - `test_dh_akem.c`
-    - `speed_dh_akem.c`
+    - `akem/dh_akem.c`
+    - `akem/dh_akem_api.h`
+    - `test/test_dh_akem.c`
+    - `speed/speed_dh_akem.c`
 - Post-quantum AKEM
     - A post-quantum KEM with the api file `kem_api.h`. One of the following is sufficient.
         - `BAT`
@@ -84,17 +84,17 @@ Dependencies on `make` and `bash` are about the automation of the benchmarking.
         - `GandalfFalcon`
         - `GandalfFalconC`
         - `GandalfMitaka`
-    - `pq_akem.c`
-    - `pq_akem_api.h`
-    - `test_pq_akem.c`
-    - `speed_pq_akem.c`
+    - `akem/pq_akem.c`
+    - `akem/pq_akem_api.h`
+    - `test/test_pq_akem.c`
+    - `speed/speed_pq_akem.c`
 - Hybrid AKEM
     - Pre-quantum AKEM dependencies (excluding `test_*` and `speed_*`)
     - Post-quantum AKEM dependencies (excluding `test_*` and `speed_*`)
-    - `h_akem.c`
-    - `h_akem_api.h`
-    - `test_h_akem.c`
-    - `speed_h_akem.c`
+    - `akem/h_akem.c`
+    - `akem/h_akem_api.h`
+    - `test/test_h_akem.c`
+    - `speed/speed_h_akem.c`
 - Shared
     - `cycles`: Access to cycle counters on aarch64 (reported in the paper) and x86-64.
     - `hash`: Cryptographic hash functions. FIPS202, BLAKE2, HMAC.
@@ -123,6 +123,10 @@ bash ./bench_everything.sh
 The log will be written to `./log/bench_log.txt`,
 and the numbers will be converted into LaTex commands in `./log/bench_latex.tex`.
 
+## How to compile, test, and benchmark without `bash` scripts
+
+See `build_run_doc.md`.
+
 ## Additional notes on benchmarking on other platforms
 
 We can also produce the performance numbers on other platforms with the same software (see `./cycles/cycles.[ch]`). The following platforms should also work.
@@ -130,10 +134,6 @@ We can also produce the performance numbers on other platforms with the same sof
 - x86 with a Linux OS.
 
 However, additional steps, such as inserting kernel modules and turning off hyperthreading and Turbo boost, are required to benchmark the performance properly. Performance on these platforms are not part of the artifact.
-
-## How to compile, test, and benchmark without `bash` scripts
-
-See `build_run_doc.md`.
 
 ## Additional notes on the scripts
 
