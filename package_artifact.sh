@@ -2,7 +2,9 @@
 
 rm -rf artifact
 mkdir -p artifact
-cp -r BAT cycles dh GandalfFalcon GandalfFalconC GandalfMitaka hash mlkem ntru_gen randombytes symmetric artifact/
+cp -r akem BAT cycles dh GandalfFalcon GandalfFalconC GandalfMitaka \
+      hash mlkem ntru_gen randombytes speed symmetric test \
+      artifact/
 cp Makefile README.md LICENSE* *.h *.c *.sh artifact/
 cd artifact
 bash ./clean_up.sh

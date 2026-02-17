@@ -16,14 +16,14 @@
    If the value is a zero, then it must be specified as:
       m = 0
       e = -1076  */
-static inline fpr
-make(uint64_t s, int32_t e, uint64_t m)
-{
-	uint64_t cc = (0xC8u >> ((unsigned)m & 7)) & 1;
-	return (s << 63)
-		+ ((uint64_t)(uint32_t)(e + 1076) << 52)
-		+ (m >> 2) + cc;
-}
+// static inline fpr
+// make(uint64_t s, int32_t e, uint64_t m)
+// {
+// 	uint64_t cc = (0xC8u >> ((unsigned)m & 7)) & 1;
+// 	return (s << 63)
+// 		+ ((uint64_t)(uint32_t)(e + 1076) << 52)
+// 		+ (m >> 2) + cc;
+// }
 
 /* Like make(), but it also sets e to -1076 in case m = 0. m MUST be either
    0 or in the [2^54,2^55-1] range. */

@@ -3,12 +3,15 @@ CC          = gcc
 
 CFLAGS      = -O3 -Wall -mcpu=native -mtune=native -Wno-unused-command-line-argument
 
+AKEM_PATH   = akem
 CYCL_PATH   = cycles
-
 RAND_PATH   = randombytes
 HASH_PATH   = hash
 SYMM_PATH   = symmetric
 NGEN_PATH   = ntru_gen
+
+TEST_PATH   = test
+SPEED_PATH  = speed
 
 DH_PATH     = dh
 
@@ -23,6 +26,7 @@ MLKEM_PATH  = mlkem
 KEM_PATH   ?= $(MLKEM_PATH)
 CFLAGS     += -DKEM_INSTANCE=\"$(KEM_PATH)\"
 
+CFLAGS     += -I$(AKEM_PATH)
 CFLAGS     += -I$(RAND_PATH) -I$(HASH_PATH) -I$(SYMM_PATH) -I$(NGEN_PATH) -I$(KEM_PATH) -I$(RSIG_PATH) -I$(DH_PATH)
 
 CYCL_HEADER = $(wildcard $(CYCL_PATH)/*.h)
@@ -53,48 +57,48 @@ HEADERS     = $(RAND_HEADER) $(HASH_HEADER) $(SYMM_HEADER) $(NGEN_HEADER) $(KEM_
 
 # DH-AKEM
 
-DH_AKEM_HEADERS    = dh_akem_api.h
+DH_AKEM_HEADERS    = $(AKEM_PATH)/dh_akem_api.h
 DH_AKEM_HEADERS   += $(RAND_HEADER) $(HASH_HEADER) $(DH_HEADER)
 
-DH_AKEM_SOURCES    = dh_akem.c
+DH_AKEM_SOURCES    = $(AKEM_PATH)/dh_akem.c
 DH_AKEM_SOURCES   += $(RAND_SOURCE) $(HASH_SOURCE) $(DH_SOURCE)
 
 DH_AKEM_CFLAGS     = $(CFLAGS)
 
 DH_AKEM_OBJS       = $(patsubst %.c, %.o, $(DH_AKEM_SOURCES))
 
-LIBDH              = libdh.a
 LIBDH_NAME         = dh
+LIBDH              = lib$(LIBDH_NAME).a
 
 # PQ-AKEM
 
-PQ_AKEM_HEADERS    = pq_akem_api.h
+PQ_AKEM_HEADERS    = $(AKEM_PATH)/pq_akem_api.h
 PQ_AKEM_HEADERS   += $(RAND_HEADER) $(HASH_HEADER) $(SYMM_HEADER) $(NGEN_HEADER) $(KEM_HEADER) $(RSIG_HEADER)
 
-PQ_AKEM_SOURCES    = pq_akem.c
+PQ_AKEM_SOURCES    = $(AKEM_PATH)/pq_akem.c
 PQ_AKEM_SOURCES   += $(RAND_SOURCE) $(HASH_SOURCE) $(SYMM_SOURCE) $(NGEN_SOURCE) $(KEM_SOURCE) $(RSIG_SOURCE)
 
 PQ_AKEM_CFLAGS     = $(CFLAGS)
 
 PQ_AKEM_OBJS       = $(patsubst %.c, %.o, $(PQ_AKEM_SOURCES))
 
-LIBPQAKEM          = libpqakem.a
 LIBPQAKEM_NAME     = pqakem
+LIBPQAKEM          = lib$(LIBPQAKEM_NAME).a
 
 # Hybrid AKEM (Shadowfax)
 
-H_AKEM_HEADERS     = h_akem_api.h
+H_AKEM_HEADERS     = $(AKEM_PATH)/h_akem_api.h
 H_AKEM_HEADERS    += $(RAND_HEADER) $(HASH_HEADER) $(SYMM_HEADER) $(NGEN_HEADER) $(KEM_HEADER) $(RSIG_HEADER) $(DH_HEADER)
 
-H_AKEM_SOURCES     = h_akem.c
+H_AKEM_SOURCES     = $(AKEM_PATH)/h_akem.c
 H_AKEM_SOURCES    += $(RAND_SOURCE) $(HASH_SOURCE) $(SYMM_SOURCE) $(NGEN_SOURCE) $(KEM_SOURCE) $(RSIG_SOURCE) $(DH_SOURCE)
 
-H_AKEM_CFLAGS     = $(CFLAGS)
+H_AKEM_CFLAGS      = $(CFLAGS)
 
 H_AKEM_OBJS        = $(patsubst %.c, %.o, $(H_AKEM_SOURCES))
 
-LIBHAKEM           = libhakem.a
 LIBHAKEM_NAME      = hakem
+LIBHAKEM           = lib$(LIBHAKEM_NAME).a
 
 all: get_compiler \
 	test speed
@@ -119,22 +123,22 @@ $(LIBPQAKEM): $(PQ_AKEM_OBJS)
 $(LIBHAKEM): $(H_AKEM_OBJS)
 	$(AR) -r $@ $(H_AKEM_OBJS)
 
-test_dh_akem: test_dh_akem.c $(LIBDH)
+test_dh_akem: $(TEST_PATH)/test_dh_akem.c $(LIBDH)
 	$(CC) $(DH_AKEM_CFLAGS) -L . -o $@ $< -l$(LIBDH_NAME)
 
-speed_dh_akem: speed_dh_akem.c $(LIBDH) $(CYCL_HEADER) $(CYCL_SOURCE)
+speed_dh_akem: $(SPEED_PATH)/speed_dh_akem.c $(LIBDH) $(CYCL_HEADER) $(CYCL_SOURCE)
 	$(CC) $(DH_AKEM_CFLAGS) -L . -I$(CYCL_PATH) $(CYCL_SOURCE) -o $@ $< -l$(LIBDH_NAME)
 
-test_pq_akem: test_pq_akem.c $(LIBPQAKEM)
+test_pq_akem: $(TEST_PATH)/test_pq_akem.c $(LIBPQAKEM)
 	$(CC) $(PQ_AKEM_CFLAGS) -L . -o $@ $< -l$(LIBPQAKEM_NAME) -lm
 
-speed_pq_akem: speed_pq_akem.c $(LIBPQAKEM) $(CYCL_HEADER) $(CYCL_SOURCE)
+speed_pq_akem: $(SPEED_PATH)/speed_pq_akem.c $(LIBPQAKEM) $(CYCL_HEADER) $(CYCL_SOURCE)
 	$(CC) $(PQ_AKEM_CFLAGS) -L . -I$(CYCL_PATH) $(CYCL_SOURCE) -o $@ $< -l$(LIBPQAKEM_NAME) -lm
 
-test_h_akem: test_h_akem.c $(LIBHAKEM)
+test_h_akem: $(TEST_PATH)/test_h_akem.c $(LIBHAKEM)
 	$(CC) $(H_AKEM_CFLAGS) -L . -o $@ $< -l$(LIBHAKEM_NAME) -lm
 
-speed_h_akem: speed_h_akem.c $(LIBHAKEM) $(CYCL_HEADER) $(CYCL_SOURCE)
+speed_h_akem: $(SPEED_PATH)/speed_h_akem.c $(LIBHAKEM) $(CYCL_HEADER) $(CYCL_SOURCE)
 	$(CC) $(H_AKEM_CFLAGS) -L . -I$(CYCL_PATH) $(CYCL_SOURCE) -o $@ $<  -l$(LIBHAKEM_NAME) -lm
 
 .PHONY: clean
