@@ -2,7 +2,10 @@
 
 set -Ee
 
-: ${LOG_PATH:=log}
+CURR_PATH=$PWD
+
+: ${SRC_PATH:="$CURR_PATH"/src}
+: ${LOG_PATH:="$CURR_PATH"/log}
 : ${LOG_FILE:="$LOG_PATH"/test_log.txt}
 
 test_dh_akem_call() {
@@ -40,6 +43,9 @@ EOF
 
 rm -f $LOG_FILE
 
+mkdir -p $LOG_PATH
+cd $SRC_PATH
+
 test_dh_akem_call
 
 test_pq_akem_call mlkem GandalfFalcon
@@ -55,6 +61,8 @@ test_h_akem_call mlkem GandalfMitaka
 test_h_akem_call BAT GandalfFalcon
 test_h_akem_call BAT GandalfFalconC
 test_h_akem_call BAT GandalfMitaka
+
+cd $CURR_PATH
 
 
 

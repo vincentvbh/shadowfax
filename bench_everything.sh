@@ -1,8 +1,14 @@
 #!/bin/bash
 
-: ${LOG_PATH:=log}
+set -Ee
+
+CURR_PATH=$PWD
+
+: ${SRC_PATH:="$CURR_PATH"/src}
+: ${LOG_PATH:="$CURR_PATH"/log}
 : ${LOG_FILE:="$LOG_PATH"/bench_log.txt}
-: ${LATEX_FILE:="$LOG_PATH"/bench_latex.tex}
+: ${LATEX_PATH:="$CURR_PATH"/latex}
+: ${LATEX_FILE:="$LATEX_PATH"/bench_latex.tex}
 
 bench() {
 make clean
@@ -39,12 +45,17 @@ fi
 
 rm -f $LOG_FILE
 
+mkdir -p $LOG_PATH
+cd $SRC_PATH
+
 bench mlkem GandalfFalcon
 bench mlkem GandalfFalconC
 bench mlkem GandalfMitaka
 bench BAT GandalfFalcon
 bench BAT GandalfFalconC
 bench BAT GandalfMitaka
+
+cd $LATEX_PATH
 
 if ! command -v cc > /dev/null 2>&1
 then
@@ -53,4 +64,8 @@ then
 else
 cc get_latex.c -o get_latex; ./get_latex $LOG_FILE $LATEX_FILE
 fi
+
+cd $CURR_PATH
+
+
 

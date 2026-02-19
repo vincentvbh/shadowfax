@@ -135,7 +135,7 @@ We can also produce the performance numbers on other platforms with the same sof
 
 However, additional steps, such as inserting kernel modules and turning off hyperthreading and Turbo boost, are required to benchmark the performance properly. Performance on these platforms are not part of the artifact.
 
-## Additional notes on the scripts
+## Additional notes of the scripts
 
 - `clean_up.sh`: Clean up all the generated files.
 - `package_artifact.sh`: Create a standalone `.zip` file with all the generated files and `git`-associated files removed.
