@@ -1,6 +1,5 @@
 
-CC0 1.0 Universal or MIT for files reside at the same level of this file.
-In each folders, see `LICENSE.md` for details.
+CC0 1.0 Universal or MIT unless specified otherwise in the `LICENSE.md` of the respective directories.
 
 # CC0 1.0 Universal
 

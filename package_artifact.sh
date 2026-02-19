@@ -2,10 +2,9 @@
 
 rm -rf artifact
 mkdir -p artifact
-cp -r akem BAT cycles dh GandalfFalcon GandalfFalconC GandalfMitaka \
-      hash mlkem ntru_gen randombytes speed symmetric test \
+cp -r latex log src \
       artifact/
-cp Makefile README.md LICENSE* *.h *.c *.sh artifact/
+cp *.md bench_everything.sh clean_up.sh test_everything.sh artifact/
 cd artifact
 bash ./clean_up.sh
 find . -name '.git*' -exec rm -rf {} \;
