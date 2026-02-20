@@ -1,7 +1,7 @@
 
 # How to build and run the binaries
 
-This files explains how the binaries are built with the `Makefile`.
+This files explains how the binaries are built with the `Makefile` in `src`.
 Example usages are included.
 
 ## Compilation

@@ -4,16 +4,6 @@ __pycache__
 
 artifact*
 
-test_dh_akem
-test_pq_akem
-test_h_akem
-
-speed_dh_akem
-speed_pq_akem
-speed_h_akem
-
-get_latex
-
 **/*.sage.py
 
 # Prerequisites
