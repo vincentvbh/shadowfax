@@ -2,10 +2,11 @@
 #define NIKE_API_H
 
 #include <stdint.h>
+#include <stddef.h>
 
-#define NIKE_PUBLICKEY_BYTES 32
-#define NIKE_SECRETKEY_BYTES 32
-#define NIKE_BYTES 64
+#define NIKE_PUBLICKEY_BYTES ((size_t)32)
+#define NIKE_SECRETKEY_BYTES ((size_t)32)
+#define NIKE_BYTES ((size_t)64)
 
 typedef struct {
     uint8_t sk[NIKE_SECRETKEY_BYTES];

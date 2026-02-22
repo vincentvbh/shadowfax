@@ -1,4 +1,9 @@
 
+/*
+Hybrid deniable AKEM.
+This file implements Figure 9 of our paper.
+*/
+
 #include "h_akem_api.h"
 #include "aes.h"
 #include "hmac.h"
@@ -8,12 +13,15 @@
 
 static const uint8_t aes_iv[12] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
+// Function Gen.
 void h_akem_keygen(h_akem_sk *sk, h_akem_pk *pk){
+    // Lines 1 ~ 3.
     kem_keygen(&sk->ksk, &pk->kpk);
     sign_keygen(&sk->ssk, &pk->spk);
     nike_keygen(&sk->nsk, &pk->npk);
 }
 
+// Function Enc.
 void h_akem_encap(uint8_t *h_akem_k, h_akem_ct *ct,
                               const h_akem_sk *sender_sk, const h_akem_pk *sender_pk,
                               const h_akem_pk *receiver_pk){
@@ -39,26 +47,33 @@ void h_akem_encap(uint8_t *h_akem_k, h_akem_ct *ct,
     uint8_t *nk1 = nk1k2.s;
     uint8_t *nk2 = nk1 + 32;
 
+    // Lines 9 ~ 12.
     nike_keygen(&e_nsk, &e_npk);
     nike_sdk(&nkprime, &sender_sk->nsk, &receiver_pk->npk);
     hmac_sha3_256((uint8_t*)&nk.s, tag, sizeof(tag), nkprime.s);
     nike_sdk(&nk1k2, &e_nsk, &receiver_pk->npk);
 
+    // Line 13.
     kem_encap(k1k2, 64, &internal_kem_ct, &receiver_pk->kpk);
 
+    // Line 14.
     memmove(m, &internal_kem_ct, KEM_CIPHERTXT_BYTES);
     memmove(m + KEM_CIPHERTXT_BYTES, &receiver_pk->kpk, KEM_PUBLICKEY_BYTES);
 
+    // Line 15.
     internal_rsig_pk.hs[0] = sender_pk->spk;
     internal_rsig_pk.hs[1] = receiver_pk->spk;
-
     Gandalf_sign(&internal_signature, m, MLEN, &internal_rsig_pk, &sender_sk->ssk, 0);
 
+    // Line 16.
     hmac_sha3_256(kprime, k1, 32, nk1);
 
+    // Line 17.
     aes128_ctr_keyexp(&ctx, kprime);
     aes128_ctr(enc_rsig, (void*)&internal_signature, RSIG_SIGNATURE_BYTES, aes_iv, &ctx);
     aes128_ctx_release(&ctx);
+
+    // Line 18 ~ 19 below.
 
     ct->npk = e_npk;
     ct->ct = internal_kem_ct;
@@ -76,6 +91,7 @@ void h_akem_encap(uint8_t *h_akem_k, h_akem_ct *ct,
 
 }
 
+// Function Dec.
 int h_akem_decap(uint8_t *h_akem_k, const h_akem_ct *ct,
                  const h_akem_sk *receiver_sk, const h_akem_pk *receiver_pk,
                  const h_akem_pk *sender_pk){
@@ -97,27 +113,35 @@ int h_akem_decap(uint8_t *h_akem_k, const h_akem_ct *ct,
     uint8_t *nk1 = nk1k2.s;
     uint8_t *nk2 = nk1 + 32;
 
+    // Lines 24 ~ 26.
     nike_sdk(&nkprime, &receiver_sk->nsk, &sender_pk->npk);
     hmac_sha3_256((uint8_t*)&nk.s, tag, sizeof(tag), nkprime.s);
     nike_sdk(&nk1k2, &receiver_sk->nsk, &ct->npk);
 
+    // Line 27.
     kem_decap(k1k2, 64, &ct->ct, &receiver_sk->ksk);
 
+    // Line 28.
     hmac_sha3_256(kprime, k1, 32, nk1);
 
-    memmove(m, &ct->ct, KEM_CIPHERTXT_BYTES);
-    memmove(m + KEM_CIPHERTXT_BYTES, &receiver_pk->kpk, KEM_PUBLICKEY_BYTES);
 
+    // Line 29.
     aes128_ctr_keyexp(&ctx, kprime);
     aes128_ctr(dec_rsig, ct->enc_rsig, RSIG_SIGNATURE_BYTES, aes_iv, &ctx);
     aes128_ctx_release(&ctx);
 
+    // Line 30.
+    memmove(m, &ct->ct, KEM_CIPHERTXT_BYTES);
+    memmove(m + KEM_CIPHERTXT_BYTES, &receiver_pk->kpk, KEM_PUBLICKEY_BYTES);
+
+    // Lines 31 ~ 32.
     internal_rsig_pk.hs[0] = sender_pk->spk;
     internal_rsig_pk.hs[1] = receiver_pk->spk;
-
     if(Gandalf_verify(m, MLEN, (const rsig_signature*)dec_rsig, &internal_rsig_pk) == 0){
         return 0;
     }
+
+    // Line 33 below.
 
     hmac_sha3_256_inc_init(&hmac_state, k2);
     sha3_256_inc_absorb(&hmac_state, (const uint8_t*)ct, sizeof(h_akem_ct));

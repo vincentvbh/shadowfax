@@ -26,7 +26,7 @@ typedef struct {
 #define H_AKEM_SECRETKEY_BYTES sizeof(h_akem_sk)
 #define H_AKEM_PUBLICKEY_BYTES sizeof(h_akem_pk)
 #define H_AKEM_CIPHERTXT_BYTES sizeof(h_akem_ct)
-#define H_AKEM_CRYPTO_BYTES 32
+#define H_AKEM_CRYPTO_BYTES ((size_t)32)
 // Message length for the ring signature.
 #define MLEN (KEM_CIPHERTXT_BYTES + KEM_PUBLICKEY_BYTES)
 

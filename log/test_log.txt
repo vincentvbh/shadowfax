@@ -91,3 +91,27 @@ Testing hybrid AKEM with mlkem + GandalfMitaka...
 ================================================================
 Testing hybrid AKEM with BAT + GandalfFalcon...
 ================================================================
+2048/2048 compatible shared secret pairs. (ok).
+
+0/4096 success decapsulation + compatible shared secret pairs. (ok).
+
+0/2048 compatible shared secret pairs. (ok).
+
+================================================================
+Testing hybrid AKEM with BAT + GandalfFalconC...
+================================================================
+2048/2048 compatible shared secret pairs. (ok).
+
+0/4096 success decapsulation + compatible shared secret pairs. (ok).
+
+0/2048 compatible shared secret pairs. (ok).
+
+================================================================
+Testing hybrid AKEM with BAT + GandalfMitaka...
+================================================================
+2048/2048 compatible shared secret pairs. (ok).
+
+0/4096 success decapsulation + compatible shared secret pairs. (ok).
+
+0/2048 compatible shared secret pairs. (ok).
+

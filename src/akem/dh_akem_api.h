@@ -3,8 +3,8 @@
 
 #include "nike_api.h"
 
-#define NIKE_AKEM_CIPHERTXT_BYTES 32
-#define NIKE_AKEM_BYTES 32
+#define NIKE_AKEM_CIPHERTXT_BYTES ((size_t)32)
+#define NIKE_AKEM_BYTES ((size_t)32)
 
 void nike_akem_keygen(nike_sk *sk, nike_pk *pk);
 void nike_akem_encap(uint8_t *k, nike_pk *ct,
