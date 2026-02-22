@@ -34,9 +34,9 @@ int main(){
     uint8_t kk[SHARED_SECRET_LEN];
     uint8_t m[NTESTS][MLEN];
 
-    printf(KEM_INSTANCE "-" RSIG_INSTANCE " " "Post-quantum AKEM public key bytes: %4zu\n", sizeof(pq_akem_pk));
-    printf(KEM_INSTANCE "-" RSIG_INSTANCE " " "Post-quantum AKEM secret key bytes: %4zu\n", sizeof(pq_akem_sk));
-    printf(KEM_INSTANCE "-" RSIG_INSTANCE " " "Post-quantum AKEM ciphertext bytes: %4zu\n", sizeof(pq_akem_ct));
+    printf(KEM_INSTANCE "-" RSIG_INSTANCE " " "Post-quantum AKEM public key bytes: %4zu\n", PQ_AKEM_PUBLICKEY_BYTES);
+    printf(KEM_INSTANCE "-" RSIG_INSTANCE " " "Post-quantum AKEM secret key bytes: %4zu\n", PQ_AKEM_SECRETKEY_BYTES);
+    printf(KEM_INSTANCE "-" RSIG_INSTANCE " " "Post-quantum AKEM ciphertext bytes: %4zu\n", PQ_AKEM_CIPHERTXT_BYTES);
 
     for(size_t i = 0; i < 512; i++){
       a.coeffs[i] = rand() % 12289;

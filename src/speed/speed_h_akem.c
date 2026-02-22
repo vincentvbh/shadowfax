@@ -33,9 +33,9 @@ int main(void){
     uint8_t kk[SHARED_SECRET_LEN];
     uint8_t m[NTESTS][MLEN];
 
-    printf(KEM_INSTANCE "-" RSIG_INSTANCE " " "Hybrid AKEM public key bytes: %4zu\n", sizeof(h_akem_pk));
-    printf(KEM_INSTANCE "-" RSIG_INSTANCE " " "Hybrid AKEM secret key bytes: %4zu\n", sizeof(h_akem_sk));
-    printf(KEM_INSTANCE "-" RSIG_INSTANCE " " "Hybrid AKEM ciphertext bytes: %4zu\n", sizeof(h_akem_ct));
+    printf(KEM_INSTANCE "-" RSIG_INSTANCE " " "Hybrid AKEM public key bytes: %4zu\n", H_AKEM_PUBLICKEY_BYTES);
+    printf(KEM_INSTANCE "-" RSIG_INSTANCE " " "Hybrid AKEM secret key bytes: %4zu\n", H_AKEM_SECRETKEY_BYTES);
+    printf(KEM_INSTANCE "-" RSIG_INSTANCE " " "Hybrid AKEM ciphertext bytes: %4zu\n", H_AKEM_CIPHERTXT_BYTES);
 
     // initialize randombyte seed
     init_prng();

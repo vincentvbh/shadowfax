@@ -21,7 +21,7 @@ This artifact provides the portable implementations for
     - the pre-quantum NIKE with `curve25519`,
     - and the set of combinations of post-quantum KEM and ring signature.
 
-Regarding the `falcon-512` inline assembly, the assembly parts are guarded by compile-time architecture tests and are portable. Our paper reports the performance of all above except for `falcon-512` in C.
+Regarding the `falcon-512` inline assembly from prior art, the assembly parts are guarded by compile-time architecture tests and are portable. Our paper reports the performance of all above except for `falcon-512` in C.
 
 ## Software requirements
 - `gcc`
@@ -39,7 +39,7 @@ To check the versions, run the following
 
 The performance numbers are highly tied to two things:
 - The hardware.
-- And the compiler.
+- The compiler.
 
 The compiler `gcc` is used for compiling, and can be overwritten by something else while running the `Makefile`.
 The command `cc` is used only for post-processing along with other scripts.
@@ -70,37 +70,44 @@ The command `cc` is used only for post-processing along with other scripts.
 
 ## Structure of this artifact
 
-- Pre-quantum AKEM
-    - `dh`
-    - `akem/dh_akem.c`
-    - `akem/dh_akem_api.h`
-    - `test/test_dh_akem.c`
-    - `speed/speed_dh_akem.c`
-- Post-quantum AKEM
-    - A post-quantum KEM with the api file `kem_api.h`. One of the following is sufficient.
-        - `BAT`
-        - `mlkem`
-    - A post-quantum ring signature with the api file `rsig_api.h`. One of the following is sufficient.
-        - `GandalfFalcon`
-        - `GandalfFalconC`
-        - `GandalfMitaka`
-    - `akem/pq_akem.c`
-    - `akem/pq_akem_api.h`
-    - `test/test_pq_akem.c`
-    - `speed/speed_pq_akem.c`
-- Hybrid AKEM
-    - Pre-quantum AKEM dependencies (excluding `test_*` and `speed_*`)
-    - Post-quantum AKEM dependencies (excluding `test_*` and `speed_*`)
-    - `akem/h_akem.c`
-    - `akem/h_akem_api.h`
-    - `test/test_h_akem.c`
-    - `speed/speed_h_akem.c`
-- Shared
-    - `cycles`: Access to cycle counters on aarch64 (reported in the paper) and x86-64.
-    - `hash`: Cryptographic hash functions. FIPS202, BLAKE2, HMAC.
-    - `ntru_gen`: NTRU solver used in BAT, Falcon, and Mitaka.
-    - `randombytes`: System randombytes and pseudo-random bytes.
-    - `symmetric`: AES.
+- `src`: Source code of the instantiations.
+    - Pre-quantum AKEM
+        - `dh`
+        - `akem/dh_akem.c`
+        - `akem/dh_akem_api.h`
+        - `test/test_dh_akem.c`
+        - `speed/speed_dh_akem.c`
+    - Post-quantum AKEM
+        - A post-quantum KEM with the api file `kem_api.h`. One of the following is sufficient.
+            - `BAT`
+            - `mlkem`
+        - A post-quantum ring signature with the api file `rsig_api.h`. One of the following is sufficient.
+            - `GandalfFalcon`
+            - `GandalfFalconC`
+            - `GandalfMitaka`
+        - `akem/pq_akem.c`: Post-quantum AKEM based on Gandalf from prior work.
+        - `akem/pq_akem_api.h`
+        - `test/test_pq_akem.c`
+        - `speed/speed_pq_akem.c`
+    - Hybrid AKEM
+        - Pre-quantum AKEM dependencies (excluding `test_*` and `speed_*`)
+        - Post-quantum AKEM dependencies (excluding `test_*` and `speed_*`)
+        - `akem/h_akem.c`: Hybrid AKEM of our paper.
+        - `akem/h_akem_api.h`
+        - `test/test_h_akem.c`
+        - `speed/speed_h_akem.c`
+    - Shared
+        - `cycles`: Access to cycle counters on aarch64 (reported in the paper) and x86-64.
+        - `hash`: Cryptographic hash functions. FIPS202, BLAKE2, HMAC.
+        - `ntru_gen`: NTRU solver used in BAT, Falcon, and Mitaka.
+        - `randombytes`: System randombytes and pseudo-random bytes.
+        - `symmetric`: AES.
+- `log`: Log of the testing and benchmarking scripts.
+    - `test_everything.sh`: The `bash` script building and testing the correctness of the instantiations.
+    - `bench_everything.sh`: The `bash` script building and benchmarking the instantiations.
+- `latex`
+    - `get_latex.c`: A C program converting the log into latex commands.
+    - `bench_latex.tex`: The LaTex file produced.
 
 ## Scripts for compiling and testing correctness
 

@@ -570,7 +570,8 @@ void poly_mul(poly *des, const poly *src1, const poly *src2){
 
 }
 
-// TODO: make this constant-time
+// WARNING: This is not constant-time.
+// Please ensure that the inputs are independent from the sensitive data.
 bool poly_test_inv(const poly src){
 
     poly NTTsrc;
@@ -591,7 +592,8 @@ bool poly_test_inv(const poly src){
 
 }
 
-// TODO: make this constant-time
+// WARNING: This is not constant-time.
+// Please ensure that the inputs are independent from the sensitive data.
 bool poly_div(poly *des, const poly *src1, const poly *src2){
 
     poly NTTsrc1, NTTsrc2;

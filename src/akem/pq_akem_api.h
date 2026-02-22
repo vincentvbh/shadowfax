@@ -4,12 +4,6 @@
 #include "kem_api.h"
 #include "rsig_api.h"
 
-// #define PQ_AKEM_SECRETKEY_BYTES 5001
-// #define PQ_AKEM_PUBLICKEY_BYTES 1417
-// #define PQ_AKEM_CIPHERTXT_BYTES 1749
-#define PQ_AKEM_CRYPTO_BYTES 32
-#define MLEN (KEM_CIPHERTXT_BYTES + 2 * KEM_PUBLICKEY_BYTES + SIGN_PUBLICKEY_BYTES)
-
 typedef struct {
     kem_sk ksk;
     sign_sk ssk;
@@ -24,6 +18,13 @@ typedef struct {
     kem_ct ct;
     uint8_t enc_rsig[RSIG_SIGNATURE_BYTES];
 } pq_akem_ct;
+
+#define PQ_AKEM_SECRETKEY_BYTES sizeof(pq_akem_sk)
+#define PQ_AKEM_PUBLICKEY_BYTES sizeof(pq_akem_pk)
+#define PQ_AKEM_CIPHERTXT_BYTES sizeof(pq_akem_ct)
+#define PQ_AKEM_CRYPTO_BYTES 32
+// Message length for the ring signature.
+#define MLEN (KEM_CIPHERTXT_BYTES + 2 * KEM_PUBLICKEY_BYTES + SIGN_PUBLICKEY_BYTES)
 
 void pq_akem_keygen(pq_akem_sk *sk, pq_akem_pk *pk);
 void pq_akem_encap(uint8_t *pq_akem_k, pq_akem_ct *ct,

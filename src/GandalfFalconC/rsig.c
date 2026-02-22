@@ -72,6 +72,7 @@ void Gandalf_sign(rsig_signature *s, const uint8_t *m, const size_t mlen,
     poly v, acc;
     poly u[RING_K];
     poly c[RING_K];
+    int32_t mask;
 
     uint8_t salt[SALT_BYTES];
     shake128incctx state;
@@ -103,12 +104,16 @@ void Gandalf_sign(rsig_signature *s, const uint8_t *m, const size_t mlen,
         poly_sub(c + party_id, &hash, &acc);
         poly_freeze(c + party_id, c + party_id);
 
-        // TODO: Make this constant-time.
         for(size_t i = 0; i < N; i++){
-            if(c[party_id].coeffs[i] < 0)
-                c[party_id].coeffs[i] = c[party_id].coeffs[i] + Q;
-            if(c[party_id].coeffs[i] > Q)
-                c[party_id].coeffs[i] = c[party_id].coeffs[i] - Q;
+
+            mask = c[party_id].coeffs[i];
+            mask = -((mask >> 31) & 1);
+            c[party_id].coeffs[i] += (Q & mask);
+
+            mask = ((Q - 1) - c[party_id].coeffs[i]);
+            mask = -((mask >> 31) & 1);
+            c[party_id].coeffs[i] -= (Q & mask);
+
             assert( (0 <= c[party_id].coeffs[i]) && (c[party_id].coeffs[i] < Q) );
         }
 
