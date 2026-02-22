@@ -21,7 +21,7 @@ This artifact provides the portable implementations for
     - the pre-quantum NIKE with `curve25519`,
     - and the set of combinations of post-quantum KEM and ring signature.
 
-Regarding the `falcon-512` inline assembly from prior art, the assembly parts are guarded by compile-time architecture tests and are portable. Our paper reports the performance of all above except for `falcon-512` in C.
+Regarding the `falcon-512` inline assembly from prior art, the assembly parts are guarded by compile-time architecture tests and are portable. Our paper reports the performance of the all above, except for `falcon-512` in C.
 
 ## Software requirements
 - `gcc`
@@ -41,9 +41,9 @@ The performance numbers are highly tied to two things:
 - The hardware.
 - The compiler.
 
-The compiler `gcc` is used for compiling, and can be overwritten by something else while running the `Makefile`.
+The compiler `gcc` is used for compilation and can be overridden by another compiler while running the `Makefile`.
 The command `cc` is used only for post-processing along with other scripts.
-`make` and `bash` are about the automation of the compilation, testing, and benchmarking.
+`make` and `bash` are about automating the compilation, testing, and benchmarking.
 
 ## Our benchmark environment
 - Apple M1 Pro
@@ -106,8 +106,8 @@ The command `cc` is used only for post-processing along with other scripts.
     - `test_everything.sh`: The `bash` script building and testing the correctness of the instantiations.
     - `bench_everything.sh`: The `bash` script building and benchmarking the instantiations.
 - `latex`
-    - `get_latex.c`: A C program converting the log into latex commands.
-    - `bench_latex.tex`: The LaTex file produced.
+    - `get_latex.c`: A C program converting the log into LaTeX commands.
+    - `bench_latex.tex`: The LaTeX file produced.
 
 ## Scripts for compiling and testing correctness
 
@@ -128,7 +128,7 @@ bash ./bench_everything.sh
 
 `bench_everything.sh` will automatically build and benchmark the implementations. Benchmarking requires root access while benchmarking on macOS.
 The log will be written to `./log/bench_log.txt`,
-and the numbers will be converted into LaTex commands in `./log/bench_latex.tex`.
+and the numbers will be converted into LaTeX commands in `./log/bench_latex.tex`.
 
 ## How to compile, test, and benchmark without `bash` scripts
 
