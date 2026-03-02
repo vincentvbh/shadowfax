@@ -7,7 +7,7 @@ When instantiated with standardised components (ML–KEM and FALCON),
 SHADOWFAX yields ciphertexts of 1,728 bytes and public keys of 2,036 bytes,
 with encapsulation and decapsulation costs of 1.8M and 0.7M cycles on an Apple M1 Pro.
 
-This artifact provides the portable implementations for
+This artifact provides the portable implementations of
 - Pre-quantum AKEM with `curve25519`.
 - Post-quantum AKEM built from
     - one of the following post-quantum KEMs,
@@ -21,7 +21,7 @@ This artifact provides the portable implementations for
     - the pre-quantum NIKE with `curve25519`,
     - and the set of combinations of post-quantum KEM and ring signature.
 
-Regarding the `falcon-512` inline assembly from prior art, the assembly parts are guarded by compile-time architecture tests and are portable. Our paper reports the performance of the all above, except for `falcon-512` in C.
+Regarding the `falcon-512` inline assembly from the prior art, the assembly parts are guarded by compile-time architecture tests and are portable. Our paper reports the performance of all of the above, except for `falcon-512` in C.
 
 ## Software requirements
 - `gcc`
@@ -41,7 +41,7 @@ The performance numbers are highly tied to two things:
 - The hardware.
 - The compiler.
 
-The compiler `gcc` is used for compilation and can be overridden by another compiler while running the `Makefile`.
+The compiler `gcc` is used for compilation and can be replaced by another compiler while running `make` with `CC=[compiler]`.
 The command `cc` is used only for post-processing along with other scripts.
 `make` and `bash` are about automating the compilation, testing, and benchmarking.
 
@@ -109,7 +109,7 @@ The command `cc` is used only for post-processing along with other scripts.
     - `get_latex.c`: A C program converting the log into LaTeX commands.
     - `bench_latex.tex`: The LaTeX file produced.
 
-## Scripts for compiling and testing correctness
+## Script for compiling and testing the correctness
 
 Run
 ```
@@ -119,7 +119,7 @@ bash ./test_everything.sh
 `test_everything.sh` will automatically build and benchmark the implementations.
 The log will be written to `./log/test_log.txt`.
 
-## Scripts for compiling and benchmarking
+## Script for compiling and benchmarking
 
 Run
 ```
@@ -140,13 +140,13 @@ We can also produce the performance numbers on other platforms with the same sof
 - Raspberry pi with a 64-bit Linux OS. This requires Raspberry pi 3/4/5.
 - x86 with a Linux OS.
 
-However, additional steps, such as inserting kernel modules and turning off hyperthreading and Turbo boost, are required to benchmark the performance properly. Performance on these platforms are not part of the artifact.
+However, additional steps, such as inserting kernel modules and turning off hyperthreading and Turbo boost, are required to benchmark properly. Performance numbers on these platforms are not part of the artifact.
 
 ## Additional notes of the scripts
 
 - `clean_up.sh`: Clean up all the generated files.
 - `package_artifact.sh`: Create a standalone `.zip` file with all the generated files and `git`-associated files removed.
-- `bench_everything.sh`: Building and benchmarking the implementations. `cc` compiles a post-processing program converting the raw data into LaTeX commands.
+- `bench_everything.sh`: Building and benchmarking the implementations. `cc` compiles a post-processing program converting the logs into LaTeX commands.
 
 
 
