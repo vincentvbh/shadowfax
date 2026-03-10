@@ -128,7 +128,7 @@ bash ./bench_everything.sh
 
 `bench_everything.sh` will automatically build and benchmark the implementations. Benchmarking requires root access while benchmarking on macOS.
 The log will be written to `./log/bench_log.txt`,
-and the numbers will be converted into LaTeX commands in `./log/bench_latex.tex`.
+and the numbers will be converted into LaTeX commands in `./latex/bench_latex.tex`.
 
 ## How to compile, test, and benchmark without `bash` scripts
 
