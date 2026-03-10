@@ -116,7 +116,7 @@ Run
 bash ./test_everything.sh
 ```
 
-`test_everything.sh` will automatically build and benchmark the implementations.
+`test_everything.sh` builds and tests the correctness of the implementations.
 The log will be written to `./log/test_log.txt`.
 
 ## Script for compiling and benchmarking
@@ -126,7 +126,7 @@ Run
 bash ./bench_everything.sh
 ```
 
-`bench_everything.sh` will automatically build and benchmark the implementations. Benchmarking requires root access while benchmarking on macOS.
+`bench_everything.sh` builds and benchmarks the implementations. Benchmarking on macOS requires root access.
 The log will be written to `./log/bench_log.txt`,
 and the numbers will be converted into LaTeX commands in `./latex/bench_latex.tex`.
 
