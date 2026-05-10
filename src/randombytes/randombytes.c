@@ -16,10 +16,6 @@ int randombytes(uint8_t *buf, size_t n){
     return prng_get_bytes(&p, buf, (int)n);
 }
 
-void randombytes_init(uint8_t *seed, size_t seed_len){
-    prng_init(&p, seed, seed_len, 0);
-}
-
 uint64_t get64(){
     return prng_get_u64(&p);
 }

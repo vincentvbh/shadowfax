@@ -111,6 +111,7 @@ test: test_dh_akem test_pq_akem test_h_akem
 speed: speed_dh_akem speed_pq_akem speed_h_akem
 
 %.o: %.c $(HEADERS)
+	$(CC) $(CFLAGS) -c $< -o $@
 
 .PRECIOUS: $(OBJS) test_dh_akem speed_dh_akem test_pq_akem speed_pq_akem test_h_akem speed_h_akem
 

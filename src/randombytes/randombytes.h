@@ -1,5 +1,5 @@
-#ifndef RNG_H
-#define RNG_H
+#ifndef RANDOMBYTES_H
+#define RANDOMBYTES_H
 
 #include <stdint.h>
 #include <stddef.h>
